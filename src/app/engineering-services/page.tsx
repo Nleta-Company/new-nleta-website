@@ -189,7 +189,7 @@ export default function EngineeringServicesPage() {
           className="pointer-events-none absolute inset-0 -z-10 opacity-20 [background-image:linear-gradient(rgba(255,255,255,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.1)_1px,transparent_1px)] [background-size:48px_48px]"
         />
 
-        <div className="container-shell w-full py-27 sm:py-22 lg:py-27">
+        <div className="container-shell w-full py-22 sm:py-22 lg:py-27">
 
 
           <div className="mx-auto max-w-5xl text-center">
