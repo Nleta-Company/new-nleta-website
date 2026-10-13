@@ -292,7 +292,7 @@ export default function AboutPage() {
 
                 <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 opacity-20 [background-image:linear-gradient(rgba(255,255,255,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.1)_1px,transparent_1px)] [background-size:52px_52px]" />
 
-                <div className="container-shell py-12 sm:py-16 lg:py-20">
+                <div className="container-shell py-20 sm:py-16 lg:py-20">
 
                     <div className="about-hero-content mx-auto max-w-4xl text-center">
 

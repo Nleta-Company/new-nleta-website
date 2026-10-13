@@ -394,7 +394,7 @@ export default function HomePage() {
 
   return (
 
-    <>
+    <div className="w-full min-w-0 overflow-x-clip">
 
       <ScrollProgress />
 
@@ -440,7 +440,7 @@ export default function HomePage() {
 
         />
 
-        <div className="container-shell home-hero-content relative z-[2] flex w-full flex-col items-center py-12 sm:py-14 lg:py-16">
+        <div className="container-shell home-hero-content relative z-[2] flex w-full flex-col items-center py-22 sm:py-14 lg:py-16">
 
           <div className="hero-reveal hero-reveal-1 mb-4 flex h-1 w-20 overflow-hidden rounded-full">
 
@@ -1620,7 +1620,7 @@ export default function HomePage() {
 
       </section>
 
-    </>
+    </div>
 
   );
 

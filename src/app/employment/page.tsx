@@ -228,7 +228,7 @@ export default function EmploymentPage() {
           />
         </div>
 
-        <div className="container-shell relative w-full py-22 text-center sm:py-24 lg:py-22">
+        <div className="container-shell relative w-full py-28 text-center sm:py-24 lg:py-22">
           <div className="-translate-y-3">
             <div className="employment-reveal mx-auto mb-5 flex h-1 w-24 overflow-hidden rounded-full">
               <span className="w-1/3 bg-[#ff9933]" />

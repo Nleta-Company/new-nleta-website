@@ -734,7 +734,7 @@ export default function TrainingPage() {
 
         />
 
-        <div className="container-shell relative py-16 text-center sm:py-20 lg:py-24">
+        <div className="container-shell relative py-21 text-center sm:py-20 lg:py-24">
 
           <div className="mx-auto mb-6 flex h-1 w-24 overflow-hidden rounded-full">
 

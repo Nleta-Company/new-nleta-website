@@ -83,7 +83,7 @@ export default function IndustriesPage() {
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#07182b]/30" />
         </div>
 
-        <div className="container-shell relative py-20 text-center md:py-28">
+        <div className="container-shell relative py-22 text-center md:py-28">
           <div className="industries-reveal mx-auto mb-6 flex h-1 w-24 overflow-hidden rounded-full">
             <span className="w-1/3 bg-[#ff9933]" />
             <span className="w-1/3 bg-white" />
