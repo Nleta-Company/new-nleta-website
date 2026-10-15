@@ -1599,3 +1599,25 @@ a {
     transition: none;
   }
 }
+
+/* Add this to app/globals.css (or your existing global stylesheet). */
+@keyframes statsCardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stats-card-enter {
+  animation: statsCardEnter 650ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stats-card-enter {
+    animation: none;
+  }
+}

@@ -3,6 +3,7 @@ import Link from "next/link";
 import ScrollReveal from "@/components/ScrollReveal";
 
 import ScrollProgress from "@/components/ScrollProgress";
+import StatsCounter from "@/components/StatsCounter";
 
 const engineeringServices = [
 
@@ -527,10 +528,98 @@ export default function HomePage() {
 
       </section>
 
+      {/* NLETA Performance Statistics — Frontend Only */}
+      <section className="relative z-10 -mt-6 pb-8 sm:-mt-8 sm:pb-10">
+        <div className="container-shell">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xl shadow-slate-900/5 sm:p-6">
+            <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <span className="eyebrow">NLETA at a Glance</span>
+                <h2 className="mt-2 text-xl font-bold tracking-tight text-nleta-navy sm:text-2xl">
+                  Performance Overview
+                </h2>
+              </div>
+              <p className="max-w-xl text-xs leading-5 text-slate-500 sm:text-sm">
+                Our inspection progress, training activities and student placements.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+              {[
+                {
+                  label: "Inspections Completed",
+                  value: 710,
+                  detail: "Inspections successfully completed",
+                  color: "text-emerald-700",
+                  accent: "bg-emerald-500",
+                },
+                {
+                  label: "Inspections In Process",
+                  value: 60,
+                  detail: "Inspections currently in progress",
+                  color: "text-blue-700",
+                  accent: "bg-blue-500",
+                },
+                {
+                  label: "Batches Completed",
+                  value: 5,
+                  detail: "Training batches completed",
+                  color: "text-teal-700",
+                  accent: "bg-teal-500",
+                  showPlus: false,
+                },
+                {
+                  label: "Batches In Process",
+                  value: 1,
+                  detail: "Training batches currently running",
+                  color: "text-amber-700",
+                  accent: "bg-amber-500",
+                  showPlus: false,
+                },
+                {
+                  label: "Placed in Elevator Companies",
+                  value: 240,
+                  detail: "Students placed in elevator companies",
+                  color: "text-indigo-700",
+                  accent: "bg-indigo-500",
+                },
+                {
+                  label: "Placed in Other Companies",
+                  value: 150,
+                  detail: "Students placed in other industries",
+                  color: "text-cyan-700",
+                  accent: "bg-cyan-500",
+                },
+              ].map((stat) => (
+                <div
+                  key={stat.label}
+                  className="stats-card-enter relative min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-50/70 p-3 transition duration-300 hover:-translate-y-1 hover:border-slate-300 hover:bg-white hover:shadow-lg sm:p-4"
+                  style={{ animationDelay: `${(stat.label.length % 6) * 70}ms` }}
+                >
+                  <span
+                    className={`absolute inset-x-0 top-0 h-1 ${stat.accent}`}
+                  />
+                  <p className="mt-1 min-h-10 text-xs font-semibold leading-5 text-slate-600 sm:text-sm">
+                    {stat.label}
+                  </p>
+                  <p
+                    className={`mt-2 text-2xl font-bold tracking-tight sm:text-3xl ${stat.color}`}
+                  >
+                    <StatsCounter value={stat.value} showPlus={stat.showPlus !== false} />
+                  </p>
+                  <p className="mt-1 text-[10px] leading-4 text-slate-500 sm:text-xs">
+                    {stat.detail}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* About NLETA */}
 
-      <section className="section-padding bg-white">
-
+      <section className="bg-white pt-8 pb-16 sm:pt-10 sm:pb-16">
         <div className="container-shell grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
 
           <ScrollReveal direction="left">

@@ -563,7 +563,7 @@ export default function EngineeringServicesPage() {
               </h2>
 
               <p className="mt-4 text-sm leading-7 text-slate-300 sm:text-base">
-                Every lift has its own operating history, technical condition
+                Every asset has its own operating history, technical condition
                 and assessment requirements. Submit your requirement through
                 NLETA&apos;s designated service-selection process.
               </p>

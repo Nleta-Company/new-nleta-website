@@ -23,49 +23,58 @@ const services = {
   pat: {
     number: "01",
     title: "PAT",
-    expansion: "Partial Acceptance Test / Safety Inspection",
-    tag: "SAFETY INSPECTION",
+    expansion: "Partial Acceptance Test",
+    tag: "PARTIAL ACCEPTANCE INSPECTION",
     reference: "TCSP-01 Rev.1 • T-01",
     intro:
-      "An initial independent safety inspection of a lift or escalator, within the applicable technical and regulatory scope.",
+      "A structured inspection and verification process used to assess the conformity, operational readiness and applicable safety requirements of a Assets system or its specified components at a particular project stage.",
     overview:
-      "PAT reviews relevant safety devices and functions, operational and engineering observations, safety documentation, and identified deficiencies. Findings are documented to support the appropriate next step.",
+      "PAT verifies completed work within the defined inspection scope, reviews applicable safety and technical requirements, documents deficiencies and records whether the inspected scope meets the prescribed criteria for partial acceptance. Findings are recorded with clear remarks and supporting evidence to maintain transparency, accountability and traceability.",
     prerequisite:
-      "PAT is the initial stage of the engineering assessment pathway. The outcome determines whether reporting can proceed, rectification or reinspection is needed, or further assessment should be considered.",
+      "The PAT scope is determined by the project requirements, Assets specifications, approved checklist and stage of installation or testing. The outcome must reflect the actual findings and approved acceptance criteria. Partial acceptance applies only to the scope assessed and does not, by itself, authorise operation of the entire Assets unless applicable approval and regulatory requirements permit it.",
     areas: [
       {
-        title: "Safety devices and functions",
-        body: "Assess relevant safety devices and functions within the confirmed inspection scope.",
+        title: "Assets identification and installation",
+        body: "Verify the Assets Information, location, asset details, available technical documents and the components included in the approved scope. Examine accessible equipment and installation elements for visible damage, incomplete work or discrepancies requiring clarification.",
       },
       {
-        title: "Engineering observations",
-        body: "Record relevant operational conditions, technical observations, deficiencies and available safety documentation.",
+        title: "Safety and operational checks",
+        body: "Examine applicable safety components and protective arrangements. Where included in the approved PAT scope, perform prescribed operational checks and record results, abnormal responses or checks that could not be completed.",
       },
       {
-        title: "Findings and follow-up",
-        body: "Document findings and identify whether rectification, reinspection or further engineering assessment is justified.",
+        title: "Defects, evidence and corrective action",
+        body: "Record each deficiency with its category, description, component or location, remarks, priority where defined, required corrective action and supporting photographs or documents. Track verification and reinspection status as applicable.",
       },
     ],
     information: [
-      "Site and lift identification",
-      "Lift or escalator type and available technical details",
-      "Available safety and maintenance records",
-      "Reason for the inspection and known concerns",
+      "Assets Information, site location and inspection reference",
+      "Approved PAT checklist, Assets specifications and available technical records",
+      "Inspection findings, failure category, detailed description and Inspector remarks",
+      "Supporting photographs, attachments, inspection date/time and Inspector identification",
+      "Corrective-action, review, approval and reinspection details where applicable",
     ],
     pathway:
-      "PAT is the starting point. SAT may be recommended where an applicable trigger is identified. The next action depends on the findings and the approved assessment requirements.",
+      "PAT is Stage 1 in the defined sequential workflow: PAT → SAT → SCI. The Inspector completes the prescribed checklist, records findings and evidence, and submits the result for review. SAT remains locked until PAT has met its completion and required approval conditions. If deficiencies prevent acceptance, the workflow stays at PAT until corrective actions and verification are completed. The approved NLETA procedure determines the exact activation and acceptance rules.",
     faqs: [
       {
         q: "What does PAT assess?",
-        a: "PAT addresses relevant safety devices and functions, operational and engineering observations, safety documentation and deficiencies within the confirmed scope.",
+        a: "PAT assesses the completed work, applicable safety-related conditions, accessible equipment and installation elements, relevant operational checks where included, available documentation and deficiencies within the confirmed inspection scope.",
+      },
+      {
+        q: "What information should be recorded when a failure is found?",
+        a: "Record the Assets and inspection references, failure status and category, observed condition, component or location, Inspector remarks, supporting evidence, date/time and required corrective action. Add review and verification status as applicable.",
+      },
+      {
+        q: "What PAT statuses may be recorded?",
+        a: "Depending on the approved workflow, statuses may include In Progress, Pending Review, Passed, Failed or Correction Required. The recorded outcome must reflect the actual findings and approved acceptance criteria.",
+      },
+      {
+        q: "Does passing PAT mean the entire Assets is approved for operation?",
+        a: "No. PAT applies only to the scope inspected. It must not be treated as unconditional acceptance of the whole Assets system or authorisation to operate unless the applicable approvals and regulatory requirements permit it.",
       },
       {
         q: "What happens after PAT?",
-        a: "Depending on the findings and applicable requirements, reporting may proceed where permitted, observations may need to be addressed, or SAT may be recommended if an applicable trigger is identified.",
-      },
-      {
-        q: "Does a PAT report automatically mean a certificate will be issued?",
-        a: "No. Reporting and any certificate are subject to the service outcome, applicable requirements, technical review, approval and document control.",
+        a: "The submitted PAT record is reviewed under the applicable procedure. If the required acceptance and approval conditions are met, the next stage may become available according to the defined PAT → SAT → SCI workflow. If a deficiency prevents acceptance, corrective action and verification are required before progression.",
       },
     ],
   },
@@ -312,24 +321,8 @@ export default async function ServiceDetailPage({
           className="pointer-events-none absolute -right-24 -top-24 -z-10 h-96 w-96 rounded-full bg-teal-400/15 blur-3xl"
         />
 
-        <div className="container-shell relative py-14 sm:py-20 lg:py-24">
-          <nav
-            aria-label="Breadcrumb"
-            className="mb-10 flex flex-wrap items-center gap-2 text-xs font-medium text-slate-300 sm:text-sm"
-          >
-            <Link href="/" className="transition hover:text-white">
-              Home
-            </Link>
-            <span aria-hidden="true">/</span>
-            <Link
-              href="/engineering-services"
-              className="transition hover:text-white"
-            >
-              Engineering Services
-            </Link>
-            <span aria-hidden="true">/</span>
-            <span className="text-teal-200">{service.title}</span>
-          </nav>
+        <div className="container-shell relative py-14 sm:py-20 lg:py-25">
+        
 
           <div className="max-w-4xl">
             <div className="mb-6 flex flex-wrap items-center gap-3">
