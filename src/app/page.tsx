@@ -337,9 +337,9 @@ const regions = [
 
   "Himachal Pradesh",
 
-  "Maharashtra — Mumbai and Pune",
+  "Maharashtra",
 
-  "Telangana — Hyderabad",
+  "Telangana",
 
 ];
 
