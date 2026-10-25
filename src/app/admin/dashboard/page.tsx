@@ -71,7 +71,65 @@ type ListResponse<T> = {
   success?: boolean;
 };
 
-type Tab = "enquiries" | "complaints" | "incidents" | "gallery";
+type Tab = "enquiries" | "complaints" | "incidents" | "accident-reports" | "gallery";
+type CaseTab = "complaints" | "incidents";
+
+type AccidentReportType = "TRAPPED" | "FATAL" | "INJURED" | "OTHER";
+type AccidentReportStatus = "DRAFT" | "PUBLISHED";
+
+type AccidentReport = {
+  id: string;
+  date: string;
+  state: string;
+  location: string;
+  equipment: string;
+  title: string;
+  details: string;
+  type: AccidentReportType;
+  fatalities: number;
+  injuries: number;
+  trapped: number;
+  other: number;
+  sourceLink?: string | null;
+  status: AccidentReportStatus;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type AccidentReportForm = {
+  date: string;
+  state: string;
+  location: string;
+  equipment: string;
+  title: string;
+  details: string;
+  type: AccidentReportType;
+  fatalities: string;
+  injuries: string;
+  trapped: string;
+  other: string;
+  sourceLink: string;
+  status: AccidentReportStatus;
+};
+
+const accidentReportTypes: AccidentReportType[] = ["TRAPPED", "FATAL", "INJURED", "OTHER"];
+const accidentReportStatuses: AccidentReportStatus[] = ["DRAFT", "PUBLISHED"];
+
+const emptyAccidentReportForm: AccidentReportForm = {
+  date: "",
+  state: "",
+  location: "",
+  equipment: "",
+  title: "",
+  details: "",
+  type: "TRAPPED",
+  fatalities: "0",
+  injuries: "0",
+  trapped: "0",
+  other: "0",
+  sourceLink: "",
+  status: "PUBLISHED",
+};
 
 const caseStatuses: CaseStatus[] = [
   "NEW",
@@ -342,6 +400,23 @@ export default function AdminDashboardPage() {
   const [caseNotes, setCaseNotes] = useState("");
   const [updatingCaseId, setUpdatingCaseId] = useState<string | null>(null);
 
+  const [accidentReports, setAccidentReports] = useState<AccidentReport[]>([]);
+  const [loadingAccidentReports, setLoadingAccidentReports] = useState(false);
+  const [accidentReportsError, setAccidentReportsError] = useState("");
+  const [accidentReportsSuccess, setAccidentReportsSuccess] = useState("");
+  const [accidentYearFilter, setAccidentYearFilter] = useState("ALL");
+  const [accidentStateFilter, setAccidentStateFilter] = useState("ALL");
+  const [accidentTypeFilter, setAccidentTypeFilter] = useState("ALL");
+  const [accidentStatusFilter, setAccidentStatusFilter] = useState("ALL");
+  const [accidentDateFrom, setAccidentDateFrom] = useState("");
+  const [accidentDateTo, setAccidentDateTo] = useState("");
+  const [accidentSearch, setAccidentSearch] = useState("");
+  const [selectedAccidentReport, setSelectedAccidentReport] = useState<AccidentReport | null>(null);
+  const [accidentForm, setAccidentForm] = useState<AccidentReportForm>(emptyAccidentReportForm);
+  const [showAccidentForm, setShowAccidentForm] = useState(false);
+  const [savingAccidentReport, setSavingAccidentReport] = useState(false);
+  const [deletingAccidentReportId, setDeletingAccidentReportId] = useState<string | null>(null);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -389,6 +464,63 @@ export default function AdminDashboardPage() {
       cancelled = true;
     };
   }, [router]);
+
+  const fetchAccidentReports = useCallback(async () => {
+    if (!API_URL) {
+      setAccidentReportsError("Admin API URL is not configured.");
+      setLoadingAccidentReports(false);
+      return;
+    }
+
+    setLoadingAccidentReports(true);
+    setAccidentReportsError("");
+
+    try {
+      const params = new URLSearchParams();
+
+      if (accidentYearFilter !== "ALL") params.set("year", accidentYearFilter);
+      if (accidentStateFilter !== "ALL") params.set("state", accidentStateFilter);
+      if (accidentTypeFilter !== "ALL") params.set("type", accidentTypeFilter);
+      if (accidentStatusFilter !== "ALL") params.set("status", accidentStatusFilter);
+      if (accidentDateFrom) params.set("dateFrom", accidentDateFrom);
+      if (accidentDateTo) params.set("dateTo", accidentDateTo);
+
+      const response = await fetch(
+        `${API_URL}/accidental-reports${params.size ? `?${params}` : ""}`,
+        { credentials: "include", cache: "no-store" },
+      );
+
+      if (response.status === 401) {
+        router.replace("/admin/login");
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(`Unable to load accident reports (HTTP ${response.status}).`);
+      }
+
+      const result: AccidentReport[] | ListResponse<AccidentReport> =
+        await response.json();
+
+      setAccidentReports(
+        Array.isArray(result) ? result : unwrapList(result).rows,
+      );
+    } catch (err) {
+      setAccidentReportsError(
+        err instanceof Error ? err.message : "Failed to load accident reports.",
+      );
+    } finally {
+      setLoadingAccidentReports(false);
+    }
+  }, [
+    router,
+    accidentYearFilter,
+    accidentStateFilter,
+    accidentTypeFilter,
+    accidentStatusFilter,
+    accidentDateFrom,
+    accidentDateTo,
+  ]);
 
   const fetchEnquiries = useCallback(async () => {
     if (!API_URL) {
@@ -504,6 +636,12 @@ export default function AdminDashboardPage() {
     }
   }, [admin, tab, fetchCases]);
 
+  useEffect(() => {
+    if (admin && tab === "accident-reports") {
+      void fetchAccidentReports();
+    }
+  }, [admin, tab, fetchAccidentReports]);
+
   async function handleEnquiryStatus(
     enquiry: Enquiry,
     nextStatus: EnquiryStatus,
@@ -555,6 +693,159 @@ export default function AdminDashboardPage() {
     }
   }
 
+  function openNewAccidentReport() {
+    setSelectedAccidentReport(null);
+    setAccidentForm({
+      ...emptyAccidentReportForm,
+      date: new Date().toISOString().slice(0, 10),
+    });
+    setAccidentReportsError("");
+    setAccidentReportsSuccess("");
+    setShowAccidentForm(true);
+  }
+
+  function openEditAccidentReport(report: AccidentReport) {
+    setSelectedAccidentReport(report);
+    setAccidentForm({
+      date: report.date ? report.date.slice(0, 10) : "",
+      state: report.state,
+      location: report.location,
+      equipment: report.equipment,
+      title: report.title,
+      details: report.details,
+      type: report.type,
+      fatalities: String(report.fatalities ?? 0),
+      injuries: String(report.injuries ?? 0),
+      trapped: String(report.trapped ?? 0),
+      other: String(report.other ?? 0),
+      sourceLink: report.sourceLink || "",
+      status: report.status,
+    });
+    setAccidentReportsError("");
+    setAccidentReportsSuccess("");
+    setShowAccidentForm(true);
+  }
+
+  async function saveAccidentReport() {
+    if (!API_URL) return;
+
+    const requiredFields = [
+      ["date", accidentForm.date],
+      ["state", accidentForm.state],
+      ["location", accidentForm.location],
+      ["equipment", accidentForm.equipment],
+      ["title", accidentForm.title],
+      ["details", accidentForm.details],
+    ] as const;
+
+    const missingField = requiredFields.find(([, value]) => !value.trim());
+
+    if (missingField) {
+      setAccidentReportsError(`${missingField[0]} is required before saving the accident report.`);
+      return;
+    }
+
+    setSavingAccidentReport(true);
+    setAccidentReportsError("");
+    setAccidentReportsSuccess("");
+
+    const payload = {
+      date: new Date(`${accidentForm.date}T00:00:00.000Z`).toISOString(),
+      state: accidentForm.state.trim(),
+      location: accidentForm.location.trim(),
+      equipment: accidentForm.equipment.trim(),
+      title: accidentForm.title.trim(),
+      details: accidentForm.details.trim(),
+      type: accidentForm.type,
+      fatalities: Math.max(0, Number(accidentForm.fatalities) || 0),
+      injuries: Math.max(0, Number(accidentForm.injuries) || 0),
+      trapped: Math.max(0, Number(accidentForm.trapped) || 0),
+      other: Math.max(0, Number(accidentForm.other) || 0),
+      sourceLink: accidentForm.sourceLink.trim() || undefined,
+      status: accidentForm.status,
+    };
+
+    try {
+      const isEditing = Boolean(selectedAccidentReport);
+      const endpoint = isEditing
+        ? `${API_URL}/accidental-reports/${encodeURIComponent(selectedAccidentReport!.id)}`
+        : `${API_URL}/accidental-reports`;
+
+      const response = await fetch(endpoint, {
+        method: isEditing ? "PATCH" : "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.status === 401) {
+        router.replace("/admin/login");
+        return;
+      }
+
+      if (!response.ok) {
+        const message = await response.text().catch(() => "");
+        throw new Error(
+          `Could not ${isEditing ? "update" : "create"} accident report (HTTP ${response.status})${message ? `: ${message.slice(0, 220)}` : ""}.`,
+        );
+      }
+
+      setShowAccidentForm(false);
+      setSelectedAccidentReport(null);
+      setAccidentForm(emptyAccidentReportForm);
+      setAccidentReportsSuccess(
+        isEditing ? "Accident report updated successfully." : "Accident report created successfully.",
+      );
+
+      await fetchAccidentReports();
+    } catch (err) {
+      setAccidentReportsError(
+        err instanceof Error ? err.message : "Failed to save accident report.",
+      );
+    } finally {
+      setSavingAccidentReport(false);
+    }
+  }
+
+  async function deleteAccidentReport(report: AccidentReport) {
+    if (!API_URL) return;
+
+    const confirmed = window.confirm(`Delete this accident report?\n\n${report.title}`);
+    if (!confirmed) return;
+
+    setDeletingAccidentReportId(report.id);
+    setAccidentReportsError("");
+    setAccidentReportsSuccess("");
+
+    try {
+      const response = await fetch(
+        `${API_URL}/accidental-reports/${encodeURIComponent(report.id)}`,
+        { method: "DELETE", credentials: "include" },
+      );
+
+      if (response.status === 401) {
+        router.replace("/admin/login");
+        return;
+      }
+
+      if (!response.ok) {
+        const message = await response.text().catch(() => "");
+        throw new Error(
+          `Could not delete accident report (HTTP ${response.status})${message ? `: ${message.slice(0, 220)}` : ""}.`,
+        );
+      }
+
+      setAccidentReports((current) => current.filter((item) => item.id !== report.id));
+      setAccidentReportsSuccess("Accident report deleted successfully.");
+    } catch (err) {
+      setAccidentReportsError(
+        err instanceof Error ? err.message : "Failed to delete accident report.",
+      );
+    } finally {
+      setDeletingAccidentReportId(null);
+    }
+  }
+
   async function saveCase() {
     if (!API_URL || !selectedCase) return;
 
@@ -587,8 +878,7 @@ export default function AdminDashboardPage() {
       if (!response.ok) {
         const message = await response.text().catch(() => "");
         throw new Error(
-          `Could not update record (HTTP ${response.status})${
-            message ? `: ${message.slice(0, 180)}` : ""
+          `Could not update record (HTTP ${response.status})${message ? `: ${message.slice(0, 180)}` : ""
           }.`,
         );
       }
@@ -733,11 +1023,10 @@ export default function AdminDashboardPage() {
           </p>
           <div className="mt-4 flex flex-wrap gap-3">
             <span
-              className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                admin.isActive
-                  ? "bg-emerald-50 text-emerald-700"
-                  : "bg-red-50 text-red-700"
-              }`}
+              className={`rounded-full px-3 py-1 text-xs font-semibold ${admin.isActive
+                ? "bg-emerald-50 text-emerald-700"
+                : "bg-red-50 text-red-700"
+                }`}
             >
               {admin.isActive ? "Active account" : "Inactive account"}
             </span>
@@ -773,6 +1062,7 @@ export default function AdminDashboardPage() {
               { id: "enquiries", label: "Contact Enquiries" },
               { id: "complaints", label: "Complaints" },
               { id: "incidents", label: "Incident Reports" },
+              { id: "accident-reports", label: "Accident Reports" },
               { id: "gallery", label: "Training Gallery" },
             ] as { id: Tab; label: string }[]
           ).map((item) => (
@@ -782,19 +1072,299 @@ export default function AdminDashboardPage() {
                 setTab(item.id);
                 setSelectedEnquiry(null);
                 setSelectedCase(null);
+                setSelectedAccidentReport(null);
+                setShowAccidentForm(false);
+                setAccidentReportsError("");
+                setAccidentReportsSuccess("");
               }}
-              className={`rounded-lg px-4 py-2.5 text-sm font-semibold transition ${
-                tab === item.id
-                  ? "bg-blue-700 text-white"
-                  : "text-slate-600 hover:bg-slate-100"
-              }`}
+              className={`rounded-lg px-4 py-2.5 text-sm font-semibold transition ${tab === item.id
+                ? "bg-blue-700 text-white"
+                : "text-slate-600 hover:bg-slate-100"
+                }`}
             >
               {item.label}
             </button>
           ))}
         </nav>
 
-        {tab === "gallery" ? (
+        {tab === "accident-reports" ? (
+          <section className="space-y-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900">
+                  Accident &amp; Incident Reports
+                </h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  Create, edit, publish and manage public accident records.
+                  Filters support year, state, type, status and date range.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => void fetchAccidentReports()}
+                  disabled={loadingAccidentReports}
+                  className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                >
+                  {loadingAccidentReports ? "Refreshing..." : "Refresh"}
+                </button>
+                <button
+                  onClick={openNewAccidentReport}
+                  className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800"
+                >
+                  + Add Accident Report
+                </button>
+              </div>
+            </div>
+
+            {accidentReportsSuccess && (
+              <div className="flex items-center justify-between gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-800">
+                <span>✓ {accidentReportsSuccess}</span>
+                <button
+                  onClick={() => setAccidentReportsSuccess("")}
+                  className="rounded px-2 py-1 hover:bg-emerald-100"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
+
+            {accidentReportsError && (
+              <div
+                role="alert"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+              >
+                <p>{accidentReportsError}</p>
+                <button
+                  onClick={() => void fetchAccidentReports()}
+                  className="rounded-lg border border-red-300 px-3 py-1.5 font-semibold"
+                >
+                  Try again
+                </button>
+              </div>
+            )}
+
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                { label: "Matching reports", value: accidentReports.length },
+                {
+                  label: "Fatalities",
+                  value: accidentReports.reduce((sum, item) => sum + (item.fatalities || 0), 0),
+                },
+                {
+                  label: "Injuries",
+                  value: accidentReports.reduce((sum, item) => sum + (item.injuries || 0), 0),
+                },
+                {
+                  label: "Trapped",
+                  value: accidentReports.reduce((sum, item) => sum + (item.trapped || 0), 0),
+                },
+              ].map((card) => (
+                <div key={card.label} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <p className="text-sm text-slate-500">{card.label}</p>
+                  <p className="mt-2 text-3xl font-bold text-slate-900">{card.value}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-2 lg:grid-cols-4">
+              <input
+                type="search"
+                value={accidentSearch}
+                onChange={(event) => setAccidentSearch(event.target.value)}
+                placeholder="Search title, location, equipment..."
+                className="rounded-lg border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+
+              <select
+                value={accidentYearFilter}
+                onChange={(event) => setAccidentYearFilter(event.target.value)}
+                className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm"
+              >
+                <option value="ALL">All years</option>
+                {Array.from(
+                  new Set(
+                    accidentReports
+                      .map((item) => new Date(item.date).getUTCFullYear())
+                      .filter((year) => Number.isFinite(year)),
+                  ),
+                )
+                  .sort((a, b) => b - a)
+                  .map((year) => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+              </select>
+
+              <select
+                value={accidentStateFilter}
+                onChange={(event) => setAccidentStateFilter(event.target.value)}
+                className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm"
+              >
+                <option value="ALL">All states</option>
+                {Array.from(new Set(accidentReports.map((item) => item.state).filter(Boolean)))
+                  .sort()
+                  .map((state) => (
+                    <option key={state} value={state}>{state}</option>
+                  ))}
+              </select>
+
+              <select
+                value={accidentTypeFilter}
+                onChange={(event) => setAccidentTypeFilter(event.target.value)}
+                className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm"
+              >
+                <option value="ALL">All types</option>
+                {accidentReportTypes.map((type) => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
+
+              <select
+                value={accidentStatusFilter}
+                onChange={(event) => setAccidentStatusFilter(event.target.value)}
+                className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm"
+              >
+                <option value="ALL">All statuses</option>
+                {accidentReportStatuses.map((status) => (
+                  <option key={status} value={status}>{status}</option>
+                ))}
+              </select>
+
+              <label className="text-sm text-slate-600">
+                <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Date from</span>
+                <input
+                  type="date"
+                  value={accidentDateFrom}
+                  onChange={(event) => setAccidentDateFrom(event.target.value)}
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm"
+                />
+              </label>
+
+              <label className="text-sm text-slate-600">
+                <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Date to</span>
+                <input
+                  type="date"
+                  value={accidentDateTo}
+                  onChange={(event) => setAccidentDateTo(event.target.value)}
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm"
+                />
+              </label>
+
+              <div className="flex items-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAccidentYearFilter("ALL");
+                    setAccidentStateFilter("ALL");
+                    setAccidentTypeFilter("ALL");
+                    setAccidentStatusFilter("ALL");
+                    setAccidentDateFrom("");
+                    setAccidentDateTo("");
+                    setAccidentSearch("");
+                  }}
+                  className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                  Clear filters
+                </button>
+              </div>
+            </div>
+
+            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[1250px] text-left text-sm">
+                  <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                    <tr>
+                      <th className="px-5 py-4">Date</th>
+                      <th className="px-5 py-4">Report</th>
+                      <th className="px-5 py-4">State / Location</th>
+                      <th className="px-5 py-4">Equipment</th>
+                      <th className="px-5 py-4">Type</th>
+                      <th className="px-5 py-4">Impact</th>
+                      <th className="px-5 py-4">Status</th>
+                      <th className="px-5 py-4">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {loadingAccidentReports ? (
+                      <tr>
+                        <td colSpan={8} className="px-5 py-12 text-center text-slate-500">
+                          Loading accident reports...
+                        </td>
+                      </tr>
+                    ) : (() => {
+                      const q = accidentSearch.trim().toLowerCase();
+                      const visibleReports = accidentReports.filter((item) => {
+                        if (!q) return true;
+                        return [item.title, item.location, item.equipment, item.state, item.details]
+                          .some((value) => value?.toLowerCase().includes(q));
+                      });
+
+                      if (visibleReports.length === 0) {
+                        return (
+                          <tr>
+                            <td colSpan={8} className="px-5 py-12 text-center text-slate-500">
+                              No accident reports found for the selected filters.
+                            </td>
+                          </tr>
+                        );
+                      }
+
+                      return visibleReports.map((item) => (
+                        <tr key={item.id} className="align-top hover:bg-slate-50/70">
+                          <td className="whitespace-nowrap px-5 py-4 text-slate-700">{formatDate(item.date)}</td>
+                          <td className="max-w-sm px-5 py-4">
+                            <p className="font-semibold text-slate-900">{item.title}</p>
+                            <p className="mt-1 line-clamp-2 text-xs text-slate-500">{item.details}</p>
+                          </td>
+                          <td className="px-5 py-4">
+                            <p className="font-semibold text-slate-800">{item.state}</p>
+                            <p className="mt-1 text-xs text-slate-500">{item.location}</p>
+                          </td>
+                          <td className="px-5 py-4 text-slate-700">{item.equipment}</td>
+                          <td className="px-5 py-4">
+                            <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">{item.type}</span>
+                          </td>
+                          <td className="px-5 py-4 text-xs text-slate-600">
+                            <div>Fatal: {item.fatalities}</div>
+                            <div>Injured: {item.injuries}</div>
+                            <div>Trapped: {item.trapped}</div>
+                          </td>
+                          <td className="px-5 py-4">
+                            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${item.status === "PUBLISHED"
+                              ? "bg-emerald-50 text-emerald-700"
+                              : "bg-amber-50 text-amber-700"
+                              }`}>
+                              {item.status}
+                            </span>
+                          </td>
+                          <td className="px-5 py-4">
+                            <div className="flex flex-col items-start gap-2">
+                              <button
+                                onClick={() => openEditAccidentReport(item)}
+                                className="font-semibold text-blue-700 hover:underline"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => void deleteAccidentReport(item)}
+                                disabled={deletingAccidentReportId === item.id}
+                                className="font-semibold text-red-600 hover:underline disabled:opacity-60"
+                              >
+                                {deletingAccidentReportId === item.id ? "Deleting..." : "Delete"}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ));
+                    })()}
+                  </tbody>
+                </table>
+              </div>
+              <div className="border-t border-slate-200 px-5 py-3 text-xs text-slate-500">
+                Showing {accidentReports.length} reports returned by the API.
+              </div>
+            </div>
+          </section>
+        ) : tab === "gallery" ? (
           <section className="space-y-5">
             <div>
               <h2 className="text-2xl font-bold text-slate-900">
@@ -1169,6 +1739,173 @@ export default function AdminDashboardPage() {
         )}
       </section>
 
+      {showAccidentForm && tab === "accident-reports" && (
+        <div
+          className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/60 p-4"
+          onClick={() => {
+            if (!savingAccidentReport) setShowAccidentForm(false);
+          }}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="accident-form-title"
+            className="max-h-[94vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 id="accident-form-title" className="text-xl font-bold text-slate-900">
+                  {selectedAccidentReport ? "Edit Accident Report" : "Add Accident Report"}
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  This record will be stored in the accidental-reports API.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAccidentForm(false)}
+                disabled={savingAccidentReport}
+                className="rounded-lg border border-slate-200 px-3 py-1.5 text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+              {[
+                ["Date", "date", "date"],
+                ["State", "state", "text"],
+                ["Location", "location", "text"],
+                ["Equipment", "equipment", "text"],
+                ["Title", "title", "text"],
+              ].map(([label, key, type]) => (
+                <label
+                  key={key}
+                  className={`text-sm font-medium text-slate-700 ${key === "title" ? "sm:col-span-2" : ""}`}
+                >
+                  {label} *
+                  <input
+                    type={type}
+                    value={accidentForm[key as keyof AccidentReportForm] as string}
+                    onChange={(event) =>
+                      setAccidentForm((current) => ({
+                        ...current,
+                        [key]: event.target.value,
+                      }))
+                    }
+                    className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm"
+                  />
+                </label>
+              ))}
+
+              <label className="text-sm font-medium text-slate-700 sm:col-span-2">
+                Incident details *
+                <textarea
+                  rows={5}
+                  value={accidentForm.details}
+                  onChange={(event) =>
+                    setAccidentForm((current) => ({ ...current, details: event.target.value }))
+                  }
+                  className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  placeholder="Describe what happened and the verified response..."
+                />
+              </label>
+
+              <label className="text-sm font-medium text-slate-700">
+                Type *
+                <select
+                  value={accidentForm.type}
+                  onChange={(event) =>
+                    setAccidentForm((current) => ({
+                      ...current,
+                      type: event.target.value as AccidentReportType,
+                    }))
+                  }
+                  className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm"
+                >
+                  {accidentReportTypes.map((type) => <option key={type} value={type}>{type}</option>)}
+                </select>
+              </label>
+
+              <label className="text-sm font-medium text-slate-700">
+                Status *
+                <select
+                  value={accidentForm.status}
+                  onChange={(event) =>
+                    setAccidentForm((current) => ({
+                      ...current,
+                      status: event.target.value as AccidentReportStatus,
+                    }))
+                  }
+                  className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm"
+                >
+                  {accidentReportStatuses.map((status) => <option key={status} value={status}>{status}</option>)}
+                </select>
+              </label>
+
+              {([
+                ["Fatalities", "fatalities"],
+                ["Injuries", "injuries"],
+                ["Trapped persons", "trapped"],
+                ["Other", "other"],
+              ] as const).map(([label, key]) => (
+                <label key={key} className="text-sm font-medium text-slate-700">
+                  {label}
+                  <input
+                    type="number"
+                    min={0}
+                    value={accidentForm[key]}
+                    onChange={(event) =>
+                      setAccidentForm((current) => ({ ...current, [key]: event.target.value }))
+                    }
+                    className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm"
+                  />
+                </label>
+              ))}
+
+              <label className="text-sm font-medium text-slate-700 sm:col-span-2">
+                Source link
+                <input
+                  type="url"
+                  value={accidentForm.sourceLink}
+                  onChange={(event) =>
+                    setAccidentForm((current) => ({ ...current, sourceLink: event.target.value }))
+                  }
+                  placeholder="https://..."
+                  className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm"
+                />
+              </label>
+            </div>
+
+            {accidentReportsError && (
+              <p role="alert" className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+                {accidentReportsError}
+              </p>
+            )}
+
+            <div className="mt-6 flex flex-wrap justify-end gap-3 border-t border-slate-200 pt-5">
+              <button
+                type="button"
+                onClick={() => setShowAccidentForm(false)}
+                disabled={savingAccidentReport}
+                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => void saveAccidentReport()}
+                disabled={savingAccidentReport}
+                className="rounded-lg bg-blue-700 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:opacity-60"
+              >
+                {savingAccidentReport ? "Saving..." : selectedAccidentReport ? "Update report" : "Create report"}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
       {selectedEnquiry && tab === "enquiries" && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/50 p-4"
@@ -1302,29 +2039,29 @@ export default function AdminDashboardPage() {
                   },
                   ...(tab === "incidents"
                     ? [
-                        {
-                          label: "Location",
-                          value: selectedCase.location || "—",
-                        },
-                        {
-                          label: "Incident date",
-                          value: formatDate(selectedCase.incidentDate),
-                        },
-                        {
-                          label: "Injury details",
-                          value: selectedCase.injuryDetails || "—",
-                        },
-                        {
-                          label: "Immediate action",
-                          value: selectedCase.immediateAction || "—",
-                        },
-                      ]
+                      {
+                        label: "Location",
+                        value: selectedCase.location || "—",
+                      },
+                      {
+                        label: "Incident date",
+                        value: formatDate(selectedCase.incidentDate),
+                      },
+                      {
+                        label: "Injury details",
+                        value: selectedCase.injuryDetails || "—",
+                      },
+                      {
+                        label: "Immediate action",
+                        value: selectedCase.immediateAction || "—",
+                      },
+                    ]
                     : [
-                        {
-                          label: "Subject",
-                          value: selectedCase.subject || "—",
-                        },
-                      ]),
+                      {
+                        label: "Subject",
+                        value: selectedCase.subject || "—",
+                      },
+                    ]),
                 ].map((field) => (
                   <div key={field.label}>
                     <p className="text-xs text-slate-500">{field.label}</p>
@@ -1371,8 +2108,8 @@ export default function AdminDashboardPage() {
                           {file.mimeType || "Unknown type"}
                           {typeof (file.sizeBytes ?? file.size) === "number"
                             ? ` · ${(
-                                (file.sizeBytes ?? file.size ?? 0) / 1024
-                              ).toFixed(1)} KB`
+                              (file.sizeBytes ?? file.size ?? 0) / 1024
+                            ).toFixed(1)} KB`
                             : ""}
                         </p>
 
@@ -1403,9 +2140,9 @@ export default function AdminDashboardPage() {
                       setSelectedCase((current) =>
                         current
                           ? {
-                              ...current,
-                              status: event.target.value as CaseStatus,
-                            }
+                            ...current,
+                            status: event.target.value as CaseStatus,
+                          }
                           : current,
                       )
                     }
