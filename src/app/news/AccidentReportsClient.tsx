@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type AccidentReportType =
   | "TRAPPED"
@@ -136,6 +136,12 @@ export default function AccidentReportsClient() {
 
   const [sortOrder, setSortOrder] =
     useState<SortOption>("latest");
+
+  const [showAllYears, setShowAllYears] = useState(false);
+
+  const reportsScrollRef = useRef<HTMLDivElement | null>(null);
+  const firstReportsGridRef = useRef<HTMLDivElement | null>(null);
+  const autoScrollPausedRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -301,6 +307,45 @@ export default function AccidentReportsClient() {
     sortOrder,
   ]);
 
+  useEffect(() => {
+    const container = reportsScrollRef.current;
+
+    if (!container || filteredReports.length <= 12) {
+      return;
+    }
+
+    let animationFrame = 0;
+    let lastTime = performance.now();
+    const speed = 50;
+
+    const animate = (time: number) => {
+      const delta = Math.min(time - lastTime, 50);
+      lastTime = time;
+
+      if (!autoScrollPausedRef.current) {
+        container.scrollTop += (speed * delta) / 1000;
+
+        const firstGrid = firstReportsGridRef.current;
+        if (firstGrid) {
+          const loopHeight = firstGrid.offsetHeight + 12;
+
+          if (loopHeight > 0 && container.scrollTop >= loopHeight) {
+            container.scrollTop -= loopHeight;
+          }
+        }
+      }
+
+      animationFrame = requestAnimationFrame(animate);
+    };
+
+    container.scrollTop = 0;
+    animationFrame = requestAnimationFrame(animate);
+
+    return () => {
+      cancelAnimationFrame(animationFrame);
+    };
+  }, [filteredReports]);
+
   const metrics = useMemo(() => {
     return {
       total: filteredReports.length,
@@ -375,6 +420,11 @@ export default function AccidentReportsClient() {
       }));
   }, [filteredReports]);
 
+  const displayedYearSummaries =
+    selectedYear !== "All Years" || showAllYears
+      ? yearSummaries
+      : yearSummaries.slice(0, 4);
+
   function resetFilters() {
     setSelectedYear("All Years");
     setSelectedState("All States");
@@ -382,6 +432,7 @@ export default function AccidentReportsClient() {
     setDateFrom("");
     setDateTo("");
     setSortOrder("latest");
+    setShowAllYears(false);
   }
 
   return (
@@ -557,8 +608,9 @@ export default function AccidentReportsClient() {
           YEAR SUMMARIES
       ========================================================= */}
       {yearSummaries.length > 0 && (
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {yearSummaries.map((summary) => (
+        <>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {displayedYearSummaries.map((summary) => (
             <div
               key={summary.year}
               className="rounded-lg border border-[#171247]/10 bg-[#171247] p-4 text-white shadow-sm"
@@ -615,8 +667,21 @@ export default function AccidentReportsClient() {
                 Filtered Results
               </div>
             </div>
-          ))}
-        </div>
+            ))}
+          </div>
+
+          {selectedYear === "All Years" && yearSummaries.length > 4 && (
+            <div className="mt-3 flex justify-center">
+              <button
+                type="button"
+                onClick={() => setShowAllYears((current) => !current)}
+                className="rounded-md bg-[#171247] px-5 py-2.5 text-xs font-bold text-white transition hover:bg-[#241b65]"
+              >
+                {showAllYears ? "Show Latest 4" : "Old News"}
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       {/* =========================================================
@@ -681,130 +746,165 @@ export default function AccidentReportsClient() {
           REPORT CARDS
       ========================================================= */}
       {!loading && !error && (
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {filteredReports.map((report) => (
-            <article
-              key={report.id}
-              className="group flex min-h-[260px] flex-col rounded-lg border border-[#171247]/20 bg-[#171247] p-4 text-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-[0_16px_35px_rgba(23,18,71,0.18)]"
+        <div
+          ref={reportsScrollRef}
+          onMouseEnter={() => {
+            autoScrollPausedRef.current = true;
+          }}
+          onMouseLeave={() => {
+            autoScrollPausedRef.current = false;
+          }}
+          className="mt-5 h-[820px] overflow-hidden rounded-xl border border-[#171247]/10 bg-white/40 p-1 pr-2 shadow-inner"
+          style={{
+            scrollbarWidth: "none",
+          }}
+        >
+          <div className="space-y-3">
+            <div
+              ref={firstReportsGridRef}
+              className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
             >
-              {/* DATE */}
-              <div className="flex items-start justify-between gap-3">
-                <p className="text-[10px] font-bold text-orange-400">
-                  {formatDate(report.date)}
-                </p>
+              {filteredReports.map((report) => (
+                <ReportCard key={report.id} report={report} />
+              ))}
 
-                <span className="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[9px] font-semibold text-white/60">
-                  {new Date(report.date).getFullYear()}
-                </span>
-              </div>
-
-              {/* LOCATION */}
-              <div className="mt-3">
-                <div className="flex items-center gap-1.5 text-[10px] font-semibold text-white/90">
-                  <span className="text-pink-400">📍</span>
-                  <span>{report.state}</span>
-                </div>
-
-                <p className="mt-1 text-[9px] text-white/55">
-                  {report.location}
-                  {report.equipment
-                    ? ` · ${report.equipment}`
-                    : ""}
-                </p>
-              </div>
-
-              {/* TITLE */}
-              <h3 className="mt-4 line-clamp-2 text-sm font-bold leading-5 text-white">
-                {report.title}
-              </h3>
-
-              {/* DETAILS */}
-              <p className="mt-2 line-clamp-3 text-[10px] leading-5 text-white/70">
-                {report.details}
-              </p>
-
-              {/* TYPE + SOURCE */}
-              <div className="mt-auto pt-4">
-                <div className="flex items-center justify-between gap-2">
-                  <span
-                    className={`rounded-md px-2 py-1 text-[9px] font-bold uppercase ${getTypeBadgeClass(
-                      report.type,
-                    )}`}
-                  >
-                    {getTypeLabel(report.type)}
-                    {getImpactCount(report) > 0
-                      ? `: ${getImpactCount(report)}`
-                      : ""}
-                  </span>
-
-                  {report.sourceLink ? (
-                    <a
-                      href={report.sourceLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="rounded-md border border-white/25 bg-white/5 px-3 py-1.5 text-[9px] font-bold text-white transition hover:border-white/50 hover:bg-white/10"
-                    >
-                      Source ↗
-                    </a>
-                  ) : (
-                    <span className="rounded-md border border-white/10 px-3 py-1.5 text-[9px] font-semibold text-white/35">
-                      No Source
-                    </span>
-                  )}
-                </div>
-
-                {/* IMPACT SUMMARY */}
-                <div className="mt-3 border-t border-white/15 pt-3">
-                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-[9px] text-white/55">
-                    <span>
-                      Fatal: {report.fatalities}
-                    </span>
-
-                    <span>
-                      Injured: {report.injuries}
-                    </span>
-
-                    <span>
-                      Trapped: {report.trapped}
-                    </span>
-
-                    <span>
-                      Other: {report.other}
-                    </span>
+              {/* EMPTY */}
+              {filteredReports.length === 0 && (
+                <div className="col-span-full rounded-lg border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#171247]/5">
+                    <span className="text-xl">📋</span>
                   </div>
+
+                  <h3 className="mt-4 text-sm font-bold text-slate-800">
+                    No accident reports found
+                  </h3>
+
+                  <p className="mx-auto mt-2 max-w-md text-xs leading-5 text-slate-500">
+                    No published reports match the selected filters.
+                    Try changing the year, state, type or date range.
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={resetFilters}
+                    className="mt-4 rounded-md bg-[#171247] px-4 py-2 text-xs font-bold text-white transition hover:bg-[#241b65]"
+                  >
+                    Clear Filters
+                  </button>
                 </div>
-              </div>
-            </article>
-          ))}
-
-          {/* EMPTY */}
-          {filteredReports.length === 0 && (
-            <div className="col-span-full rounded-lg border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#171247]/5">
-                <span className="text-xl">📋</span>
-              </div>
-
-              <h3 className="mt-4 text-sm font-bold text-slate-800">
-                No accident reports found
-              </h3>
-
-              <p className="mx-auto mt-2 max-w-md text-xs leading-5 text-slate-500">
-                No published reports match the selected filters.
-                Try changing the year, state, type or date range.
-              </p>
-
-              <button
-                type="button"
-                onClick={resetFilters}
-                className="mt-4 rounded-md bg-[#171247] px-4 py-2 text-xs font-bold text-white transition hover:bg-[#241b65]"
-              >
-                Clear Filters
-              </button>
+              )}
             </div>
-          )}
+
+            {filteredReports.length > 12 && (
+              <div
+                aria-hidden="true"
+                className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
+              >
+                {filteredReports.map((report) => (
+                  <ReportCard key={`duplicate-${report.id}`} report={report} />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
+  );
+}
+
+function ReportCard({ report }: { report: AccidentReport }) {
+  return (
+    <article
+      className="group flex min-h-[260px] flex-col rounded-lg border border-[#171247]/20 bg-[#171247] p-4 text-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-[0_16px_35px_rgba(23,18,71,0.18)]"
+    >
+      {/* DATE */}
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-[10px] font-bold text-orange-400">
+          {formatDate(report.date)}
+        </p>
+
+        <span className="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[9px] font-semibold text-white/60">
+          {new Date(report.date).getFullYear()}
+        </span>
+      </div>
+
+      {/* LOCATION */}
+      <div className="mt-3">
+        <div className="flex items-center gap-1.5 text-[10px] font-semibold text-white/90">
+          <span className="text-pink-400">📍</span>
+          <span>{report.state}</span>
+        </div>
+
+        <p className="mt-1 text-[9px] text-white/55">
+          {report.location}
+          {report.equipment
+            ? ` · ${report.equipment}`
+            : ""}
+        </p>
+      </div>
+
+      {/* TITLE */}
+      <h3 className="mt-4 line-clamp-2 text-sm font-bold leading-5 text-white">
+        {report.title}
+      </h3>
+
+      {/* DETAILS */}
+      <p className="mt-2 line-clamp-3 text-[10px] leading-5 text-white/70">
+        {report.details}
+      </p>
+
+      {/* TYPE + SOURCE */}
+      <div className="mt-auto pt-4">
+        <div className="flex items-center justify-between gap-2">
+          <span
+            className={`rounded-md px-2 py-1 text-[9px] font-bold uppercase ${getTypeBadgeClass(
+              report.type,
+            )}`}
+          >
+            {getTypeLabel(report.type)}
+            {getImpactCount(report) > 0
+              ? `: ${getImpactCount(report)}`
+              : ""}
+          </span>
+
+          {report.sourceLink ? (
+            <a
+              href={report.sourceLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-md border border-white/25 bg-white/5 px-3 py-1.5 text-[9px] font-bold text-white transition hover:border-white/50 hover:bg-white/10"
+            >
+              Source ↗
+            </a>
+          ) : (
+            <span className="rounded-md border border-white/10 px-3 py-1.5 text-[9px] font-semibold text-white/35">
+              No Source
+            </span>
+          )}
+        </div>
+
+        {/* IMPACT SUMMARY */}
+        <div className="mt-3 border-t border-white/15 pt-3">
+          <div className="flex flex-wrap gap-x-3 gap-y-1 text-[9px] text-white/55">
+            <span>
+              Fatal: {report.fatalities}
+            </span>
+
+            <span>
+              Injured: {report.injuries}
+            </span>
+
+            <span>
+              Trapped: {report.trapped}
+            </span>
+
+            <span>
+              Other: {report.other}
+            </span>
+          </div>
+        </div>
+      </div>
+    </article>
   );
 }
 
