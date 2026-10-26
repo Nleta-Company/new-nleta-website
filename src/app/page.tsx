@@ -391,6 +391,21 @@ function Arrow() {
 
 }
 
+const clpOnline = 279;
+const clpOffline = 80;
+const clpHybrid = 45;
+
+const inspectionClients = 495;
+const clpClients = 318;
+const employersWithPortal = 456;
+
+const vacanciesLiftIndustry = 1260;
+const vacanciesOtherIndustry = 315;
+const totalVacancies = vacanciesLiftIndustry + vacanciesOtherIndustry;
+
+const totalSatisfiedClients =
+  employersWithPortal + clpClients + inspectionClients;
+
 export default function HomePage() {
 
   return (
@@ -532,7 +547,7 @@ export default function HomePage() {
       <section className="relative z-10 -mt-6 pb-8 sm:-mt-8 sm:pb-10">
         <div className="container-shell">
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xl shadow-slate-900/5 sm:p-6">
-            <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <span className="eyebrow">NLETA at a Glance</span>
                 <h2 className="mt-2 text-xl font-bold tracking-tight text-nleta-navy sm:text-2xl">
@@ -540,78 +555,314 @@ export default function HomePage() {
                 </h2>
               </div>
               <p className="max-w-xl text-xs leading-5 text-slate-500 sm:text-sm">
-                Our inspection progress, training activities and student placements.
+                Our inspection progress, training activities, employment connectivity and client satisfaction.
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-              {[
-                {
-                  label: "Inspections Completed",
-                  value: 710,
-                  detail: "Inspections successfully completed",
-                  color: "text-emerald-700",
-                  accent: "bg-emerald-500",
-                },
-                {
-                  label: "Inspections In Process",
-                  value: 60,
-                  detail: "Inspections currently in progress",
-                  color: "text-blue-700",
-                  accent: "bg-blue-500",
-                },
-                {
-                  label: "Batches Completed",
-                  value: 5,
-                  detail: "Training batches completed",
-                  color: "text-teal-700",
-                  accent: "bg-teal-500",
-                  showPlus: false,
-                },
-                {
-                  label: "Batches In Process",
-                  value: 1,
-                  detail: "Training batches currently running",
-                  color: "text-amber-700",
-                  accent: "bg-amber-500",
-                  showPlus: false,
-                },
-                {
-                  label: "Placed in Elevator Companies",
-                  value: 240,
-                  detail: "Students placed in elevator companies",
-                  color: "text-indigo-700",
-                  accent: "bg-indigo-500",
-                },
-                {
-                  label: "Placed in Other Companies",
-                  value: 150,
-                  detail: "Students placed in other industries",
-                  color: "text-cyan-700",
-                  accent: "bg-cyan-500",
-                },
-              ].map((stat) => (
-                <div
-                  key={stat.label}
-                  className="stats-card-enter relative min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-50/70 p-3 transition duration-300 hover:-translate-y-1 hover:border-slate-300 hover:bg-white hover:shadow-lg sm:p-4"
-                  style={{ animationDelay: `${(stat.label.length % 6) * 70}ms` }}
-                >
-                  <span
-                    className={`absolute inset-x-0 top-0 h-1 ${stat.accent}`}
-                  />
-                  <p className="mt-1 min-h-10 text-xs font-semibold leading-5 text-slate-600 sm:text-sm">
-                    {stat.label}
+            <div className="grid gap-4 lg:grid-cols-2">
+              {/* ===================================================
+    INSPECTION
+==================================================== */}
+              <div className="stats-card-enter overflow-hidden rounded-xl border border-slate-200 bg-slate-50/70 p-4 transition duration-300 hover:-translate-y-1 hover:border-slate-300 hover:bg-white hover:shadow-lg sm:p-5">
+                <div className="mb-4">
+                  <p className="text-xs font-bold uppercase tracking-[0.15em] text-orange-500">
+                    Inspection
                   </p>
-                  <p
-                    className={`mt-2 text-2xl font-bold tracking-tight sm:text-3xl ${stat.color}`}
-                  >
-                    <StatsCounter value={stat.value} showPlus={stat.showPlus !== false} />
+
+                  <h3 className="mt-1 text-lg font-bold text-nleta-navy">
+                    Inspection Performance Customer Services
+                  </h3>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-4">
+
+                  {/* No. of Clients */}
+                  <div className="relative overflow-hidden rounded-lg border border-purple-100 bg-white p-4">
+                    <span className="absolute inset-x-0 top-0 h-1 bg-purple-500" />
+
+                    <p className="text-xs font-semibold leading-5 text-slate-600">
+                      Number of Clients
+                    </p>
+
+                    <p className="mt-2 text-2xl font-bold tracking-tight text-purple-700 sm:text-3xl">
+                      <StatsCounter value={inspectionClients} showPlus={false} />
+                    </p>
+
+                    <p className="mt-1 text-[10px] leading-4 text-slate-500 sm:text-xs">
+                      Total inspection clients
+                    </p>
+                  </div>
+
+                  {/* Inspections Completed */}
+                  <div className="relative overflow-hidden rounded-lg border border-emerald-100 bg-white p-4">
+                    <span className="absolute inset-x-0 top-0 h-1 bg-emerald-500" />
+
+                    <p className="text-xs font-semibold leading-5 text-slate-600">
+                      Inspections Completed
+                    </p>
+
+                    <p className="mt-2 text-2xl font-bold tracking-tight text-emerald-700 sm:text-3xl">
+                      <StatsCounter value={733} />
+                    </p>
+
+                    <p className="mt-1 text-[10px] leading-4 text-slate-500 sm:text-xs">
+                      Inspections successfully completed
+                    </p>
+                  </div>
+
+                  {/* Inspections In Process */}
+                  <div className="relative overflow-hidden rounded-lg border border-blue-100 bg-white p-4">
+                    <span className="absolute inset-x-0 top-0 h-1 bg-blue-500" />
+
+                    <p className="text-xs font-semibold leading-5 text-slate-600">
+                      Inspections In Process
+                    </p>
+
+                    <p className="mt-2 text-2xl font-bold tracking-tight text-blue-700 sm:text-3xl">
+                      <StatsCounter value={81} />
+                    </p>
+
+                    <p className="mt-1 text-[10px] leading-4 text-slate-500 sm:text-xs">
+                      Inspections currently in progress
+                    </p>
+                  </div>
+
+                  
+
+                  {/* Units in DGS */}
+                  <div className="relative overflow-hidden rounded-lg border border-cyan-100 bg-white p-4">
+                    <span className="absolute inset-x-0 top-0 h-1 bg-cyan-500" />
+
+                    <p className="text-xs font-semibold leading-5 text-slate-600">
+                      Units in Digital Governance System (DGS)
+                    </p>
+
+                    <p className="mt-2 text-2xl font-bold tracking-tight text-cyan-700 sm:text-3xl">
+                      <StatsCounter value={609} showPlus={false} />
+                    </p>
+
+                    <p className="mt-1 text-[10px] leading-4 text-slate-500 sm:text-xs">
+                      Units registered in the DGS
+                    </p>
+                  </div>
+
+                </div>
+              </div>
+
+              {/* Skill India / Skill Development Training */}
+              <div className="stats-card-enter overflow-hidden rounded-xl border border-slate-200 bg-slate-50/70 p-4 transition duration-300 hover:-translate-y-1 hover:border-slate-300 hover:bg-white hover:shadow-lg sm:p-5">
+                <div className="mb-4">
+                  <p className="text-xs font-bold uppercase tracking-[0.15em] text-orange-500">
+                    Skill India / Skill Development Training
                   </p>
-                  <p className="mt-1 text-[10px] leading-4 text-slate-500 sm:text-xs">
-                    {stat.detail}
+                  <h3 className="mt-1 text-lg font-bold text-nleta-navy">
+                    Training &amp; Placement
+                  </h3>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="relative overflow-hidden rounded-lg border border-teal-100 bg-white p-4">
+                    <span className="absolute inset-x-0 top-0 h-1 bg-teal-500" />
+                    <p className="text-xs font-semibold leading-5 text-slate-600">
+                      Batches Completed
+                    </p>
+                    <p className="mt-2 text-2xl font-bold tracking-tight text-teal-700 sm:text-3xl">
+                      <StatsCounter value={5} showPlus={false} />
+                    </p>
+                    <p className="mt-1 text-[10px] leading-4 text-slate-500 sm:text-xs">
+                      Training batches completed
+                    </p>
+                  </div>
+
+                  <div className="relative overflow-hidden rounded-lg border border-indigo-100 bg-white p-4">
+                    <span className="absolute inset-x-0 top-0 h-1 bg-indigo-500" />
+                    <p className="text-xs font-semibold leading-5 text-slate-600">
+                      Placed in Elevator Companies
+                    </p>
+                    <p className="mt-2 text-2xl font-bold tracking-tight text-indigo-700 sm:text-3xl">
+                      <StatsCounter value={240} />
+                    </p>
+                    <p className="mt-1 text-[10px] leading-4 text-slate-500 sm:text-xs">
+                      Students placed in elevator companies
+                    </p>
+                  </div>
+
+                  <div className="relative overflow-hidden rounded-lg border border-cyan-100 bg-white p-4">
+                    <span className="absolute inset-x-0 top-0 h-1 bg-cyan-500" />
+                    <p className="text-xs font-semibold leading-5 text-slate-600">
+                      Placed in Other Companies
+                    </p>
+                    <p className="mt-2 text-2xl font-bold tracking-tight text-cyan-700 sm:text-3xl">
+                      <StatsCounter value={150} />
+                    </p>
+                    <p className="mt-1 text-[10px] leading-4 text-slate-500 sm:text-xs">
+                      Students placed in other industries
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Corporate Learning Program */}
+              <div className="stats-card-enter overflow-hidden rounded-xl border border-slate-200 bg-slate-50/70 p-4 transition duration-300 hover:-translate-y-1 hover:border-slate-300 hover:bg-white hover:shadow-lg sm:p-5">
+                <div className="mb-4">
+                  <p className="text-xs font-bold uppercase tracking-[0.15em] text-orange-500">
+                    Corporate Learning Program (CLP)
+                  </p>
+                  <h3 className="mt-1 text-lg font-bold text-nleta-navy">
+                    Training Delivered
+                  </h3>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  {/* Number of Clients */}
+                  <div className="relative overflow-hidden rounded-lg border border-orange-100 bg-white p-4">
+                    <span className="absolute inset-x-0 top-0 h-1 bg-orange-500" />
+                    <p className="text-xs font-semibold leading-5 text-slate-600">
+                      Number of Clients
+                    </p>
+                    <p className="mt-2 text-2xl font-bold tracking-tight text-orange-600 sm:text-3xl">
+                      <StatsCounter value={clpClients} showPlus={false} />
+                    </p>
+                    <p className="mt-1 text-[10px] leading-4 text-slate-500 sm:text-xs">
+                      Total CLP clients
+                    </p>
+                  </div>
+                  
+                  <div className="relative overflow-hidden rounded-lg border border-blue-100 bg-white p-4">
+                    <span className="absolute inset-x-0 top-0 h-1 bg-blue-500" />
+                    <p className="text-xs font-semibold leading-5 text-slate-600">
+                      Online
+                    </p>
+                    <p className="mt-2 text-2xl font-bold tracking-tight text-blue-700 sm:text-3xl">
+                      <StatsCounter value={clpOnline} showPlus={false} />
+                    </p>
+                    <p className="mt-1 text-[10px] leading-4 text-slate-500 sm:text-xs">
+                      Online CLP programs
+                    </p>
+                  </div>
+
+                  <div className="relative overflow-hidden rounded-lg border border-purple-100 bg-white p-4">
+                    <span className="absolute inset-x-0 top-0 h-1 bg-purple-500" />
+                    <p className="text-xs font-semibold leading-5 text-slate-600">
+                      Offline
+                    </p>
+                    <p className="mt-2 text-2xl font-bold tracking-tight text-purple-700 sm:text-3xl">
+                      <StatsCounter value={clpOffline} showPlus={false} />
+                    </p>
+                    <p className="mt-1 text-[10px] leading-4 text-slate-500 sm:text-xs">
+                      Offline CLP programs
+                    </p>
+                  </div>
+
+                  <div className="relative overflow-hidden rounded-lg border border-teal-100 bg-white p-4">
+                    <span className="absolute inset-x-0 top-0 h-1 bg-teal-500" />
+                    <p className="text-xs font-semibold leading-5 text-slate-600">
+                      Hybrid
+                    </p>
+                    <p className="mt-2 text-2xl font-bold tracking-tight text-teal-700 sm:text-3xl">
+                      <StatsCounter value={clpHybrid} showPlus={false} />
+                    </p>
+                    <p className="mt-1 text-[10px] leading-4 text-slate-500 sm:text-xs">
+                      Hybrid CLP programs
+                    </p>
+                  </div>
+
+                  
+                </div>
+              </div>
+
+              {/* Employer Connect */}
+              <div className="stats-card-enter overflow-hidden rounded-xl border border-slate-200 bg-slate-50/70 p-4 transition duration-300 hover:-translate-y-1 hover:border-slate-300 hover:bg-white hover:shadow-lg sm:p-5">
+                <div className="mb-4">
+                  <p className="text-xs font-bold uppercase tracking-[0.15em] text-orange-500">
+                    Employer Connect
+                  </p>
+                  <h3 className="mt-1 text-lg font-bold text-nleta-navy">
+                    Employment Opportunities
+                  </h3>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-4">
+                  <div className="relative overflow-hidden rounded-lg border border-amber-100 bg-white p-4">
+                    <span className="absolute inset-x-0 top-0 h-1 bg-amber-500" />
+                    <p className="text-xs font-semibold leading-5 text-slate-600">
+                      Total Vacancies
+                    </p>
+                    <p className="mt-2 text-2xl font-bold tracking-tight text-amber-700 sm:text-3xl">
+                      <StatsCounter value={totalVacancies} showPlus={false} />
+                    </p>
+                    <p className="mt-1 text-[10px] leading-4 text-slate-500 sm:text-xs">
+                      Total vacancies available
+                    </p>
+                  </div>
+
+                  <div className="relative overflow-hidden rounded-lg border border-indigo-100 bg-white p-4">
+                    <span className="absolute inset-x-0 top-0 h-1 bg-indigo-500" />
+                    <p className="text-xs font-semibold leading-5 text-slate-600">
+                      Number of Employers with Portal
+                    </p>
+                    <p className="mt-2 text-2xl font-bold tracking-tight text-indigo-700 sm:text-3xl">
+                      <StatsCounter value={employersWithPortal} showPlus={false} />
+                    </p>
+                    <p className="mt-1 text-[10px] leading-4 text-slate-500 sm:text-xs">
+                      Vacancies listed through the portal
+                    </p>
+                  </div>
+
+                  <div className="relative overflow-hidden rounded-lg border border-indigo-100 bg-white p-4">
+                    <span className="absolute inset-x-0 top-0 h-1 bg-indigo-500" />
+                    <p className="text-xs font-semibold leading-5 text-slate-600">
+                      Vacancies with Portal — Lift Industry
+                    </p>
+                    <p className="mt-2 text-2xl font-bold tracking-tight text-indigo-700 sm:text-3xl">
+                      <StatsCounter value={vacanciesLiftIndustry} showPlus={false} />
+                    </p>
+                    <p className="mt-1 text-[10px] leading-4 text-slate-500 sm:text-xs">
+                      Vacancies listed through the portal
+                    </p>
+                  </div>
+
+                  <div className="relative overflow-hidden rounded-lg border border-cyan-100 bg-white p-4">
+                    <span className="absolute inset-x-0 top-0 h-1 bg-cyan-500" />
+                    <p className="text-xs font-semibold leading-5 text-slate-600">
+                      Vacancies with Portal — Other Industry
+                    </p>
+                    <p className="mt-2 text-2xl font-bold tracking-tight text-cyan-700 sm:text-3xl">
+                      <StatsCounter value={vacanciesOtherIndustry} showPlus={false} />
+                    </p>
+                    <p className="mt-1 text-[10px] leading-4 text-slate-500 sm:text-xs">
+                      Vacancies listed across other industries
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Client Satisfaction */}
+              <div className="stats-card-enter overflow-hidden rounded-xl border border-slate-200 bg-slate-50/70 p-4 transition duration-300 hover:-translate-y-1 hover:border-slate-300 hover:bg-white hover:shadow-lg sm:p-5 lg:col-span-2">
+                <div className="mb-4">
+                  <p className="text-xs font-bold uppercase tracking-[0.15em] text-orange-500">
+                    Client Satisfaction
+                  </p>
+                  <h3 className="mt-1 text-lg font-bold text-nleta-navy">
+                    NLETA Satisfied Clients
+                  </h3>
+                </div>
+
+                <div className="flex items-center justify-between gap-4 rounded-lg border border-emerald-100 bg-white p-4 sm:p-5">
+                  <div>
+                    <p className="text-xs font-semibold leading-5 text-slate-600 sm:text-sm">
+                      Total No. of Satisfied Clients
+                    </p>
+                    <p className="mt-1 text-[10px] leading-4 text-slate-500 sm:text-xs">
+                      Clients satisfied with NLETA&apos;s services
+                    </p>
+                  </div>
+
+                  <p className="shrink-0 text-3xl font-bold tracking-tight text-emerald-700 sm:text-4xl">
+                    <StatsCounter value={totalSatisfiedClients} showPlus={false} />
                   </p>
                 </div>
-              ))}
+              </div>
             </div>
           </div>
         </div>

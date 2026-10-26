@@ -56,7 +56,6 @@ export default function StatsCounter({
   return (
     <span ref={elementRef} className="tabular-nums">
       {count.toLocaleString("en-IN")}
-      {showPlus ? "+" : ""}
     </span>
   );
 }
