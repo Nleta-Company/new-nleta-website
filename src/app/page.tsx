@@ -805,7 +805,7 @@ export default function HomePage() {
                       <StatsCounter value={employersWithPortal} showPlus={false} />
                     </p>
                     <p className="mt-1 text-[10px] leading-4 text-slate-500 sm:text-xs">
-                      Vacancies listed through the portal
+                      Employers with Portal
                     </p>
                   </div>
 
