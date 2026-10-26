@@ -21,5 +21,5 @@ export const footerNavigation = [
   { label: "Knowledge Centre", href: "/knowledge-centre" },
   { label: "Case Studies", href: "/case-studies" },
   { label: "Certifications", href: "/certifications" },
-  { label: "Contact", href: "/contact" },
+  { label: "Documents", href: "/documents" },
 ];
