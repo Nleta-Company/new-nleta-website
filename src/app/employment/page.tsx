@@ -1,5 +1,8 @@
-import Link from "next/link";
+"use client";
 
+import { useState } from "react";
+import Link from "next/link";
+import EmployerConnectForm from "@/components/EmployerConnectForm";
 const employerGroups = [
   {
     number: "01",
@@ -204,6 +207,18 @@ const safeguards = [
 ];
 
 export default function EmploymentPage() {
+  const [showEmployerForm, setShowEmployerForm] = useState(false);
+
+  const openEmployerForm = () => {
+    setShowEmployerForm(true);
+    window.setTimeout(() => {
+      document.getElementById("employer-connect-form")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 100);
+  };
+
   return (
     <>
       {/* Hero */}
@@ -248,9 +263,13 @@ export default function EmploymentPage() {
               Find Talent. Verify Credentials. Build Workforce Confidence.
             </p>
             <div className="employment-reveal employment-delay-3 mt-7 flex flex-wrap justify-center gap-3">
-              <Link href="#employers" className="group inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#0d9488] to-[#12a6a0] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-teal-950/20 transition duration-300 hover:-translate-y-1 hover:shadow-xl">
+              <button
+                type="button"
+                onClick={openEmployerForm}
+                className="group inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#0d9488] to-[#12a6a0] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-teal-950/20 transition duration-300 hover:-translate-y-1 hover:shadow-xl"
+              >
                 I&apos;m an Employer <span aria-hidden="true" className="inline-block transition-transform duration-300 group-hover:translate-x-1">→</span>
-              </Link>
+              </button>
               <Link href="#candidates" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/30 bg-white/5 px-5 py-3 text-sm font-semibold text-white backdrop-blur-sm transition duration-300 hover:-translate-y-1 hover:border-white/60 hover:bg-white/10">
                 I&apos;m a Candidate
               </Link>
@@ -293,15 +312,36 @@ export default function EmploymentPage() {
                     </li>
                   ))}
                 </ul>
-                <Link
-                  href={`/contact?audience=employer&interest=employment&market=${group.number === "02" ? "international" : group.number === "01" ? "national" : "other"}`}
-                  className="group/cta mt-8 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#3e9bf9] to-[#b5daff] px-5 py-3 text-sm font-bold text-white transition duration-300 hover:-translate-y-0.5 hover:shadow-lg"
+                <button
+                  type="button"
+                  onClick={openEmployerForm}
+                  className="group/cta mt-8 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#0d9488] to-[#12a6a0] px-5 py-3 text-sm font-bold text-white transition duration-300 hover:-translate-y-0.5 hover:shadow-lg"
                 >
                   Discuss Employer Requirements <span aria-hidden="true" className="transition-transform duration-300 group-hover/cta:translate-x-1">→</span>
-                </Link>
+                </button>
               </article>
             ))}
           </div>
+
+          {showEmployerForm && (
+            <div id="employer-connect-form" className="mt-10 scroll-mt-24">
+              <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#07877f]">Employer Registration</p>
+                  <h3 className="mt-2 text-2xl font-bold text-[#102844]">Share your hiring requirements</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowEmployerForm(false)}
+                  className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                >
+                  Close Form ×
+                </button>
+              </div>
+              <EmployerConnectForm />
+            </div>
+          )}
+
           <p className="mt-6 text-xs leading-6 text-slate-500">
             International enquiries are reviewed against destination-country immigration, employment, technical licensing and recruitment requirements. NLETA is not a government authority, visa authority or statutory adjudicator.
           </p>

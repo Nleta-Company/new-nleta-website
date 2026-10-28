@@ -30,6 +30,58 @@ type Enquiry = {
   createdAt: string;
 };
 
+type EmployerEnquiryStatus =
+  | "NEW"
+  | "CONTACTED"
+  | "IN_PROGRESS"
+  | "COMPLETED"
+  | "REJECTED";
+
+type EmployerRequirement = {
+  id: string;
+  hiringMarket: string;
+  destinationCountry?: string | null;
+  industry: string;
+  jobRole: string;
+  vacancies: number;
+  qualification?: string | null;
+  experience?: string | null;
+  salary: string;
+  jobLocation: string;
+  employmentType: string;
+  contractDuration?: string | null;
+};
+
+type EmployerEnquiry = {
+  id: string;
+  referenceNumber: string;
+  companyName: string;
+  employerType: string;
+  country: string;
+  state?: string | null;
+  city: string;
+  address?: string | null;
+  website?: string | null;
+  agencyLicence?: string | null;
+  contactName: string;
+  designation: string;
+  email: string;
+  phone: string;
+  recruitmentModel: string;
+  sponsorship?: string | null;
+  accommodation: string;
+  transport: string;
+  workingHours: string;
+  weeklyOff?: string | null;
+  additionalConditions?: string | null;
+  declaration: boolean;
+  status: EmployerEnquiryStatus;
+  adminNotes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  requirements: EmployerRequirement[];
+};
+
 type CaseStatus = "NEW" | "UNDER_REVIEW" | "RESOLVED" | "CLOSED";
 
 type Evidence = {
@@ -71,7 +123,7 @@ type ListResponse<T> = {
   success?: boolean;
 };
 
-type Tab = "enquiries" | "complaints" | "incidents" | "accident-reports" | "gallery";
+type Tab = "enquiries" | "employer-connect" | "complaints" | "incidents" | "accident-reports" | "gallery";
 type CaseTab = "complaints" | "incidents";
 
 type AccidentReportType = "TRAPPED" | "FATAL" | "INJURED" | "OTHER";
@@ -157,6 +209,30 @@ const enquiryStatusLabels: Record<EnquiryStatus, string> = {
   IN_PROGRESS: "In Progress",
   RESOLVED: "Resolved",
 };
+
+const employerStatusLabels: Record<EmployerEnquiryStatus, string> = {
+  NEW: "New",
+  CONTACTED: "Contacted",
+  IN_PROGRESS: "In Progress",
+  COMPLETED: "Completed",
+  REJECTED: "Rejected",
+};
+
+const employerStatusClass: Record<EmployerEnquiryStatus, string> = {
+  NEW: "bg-blue-50 text-blue-700",
+  CONTACTED: "bg-violet-50 text-violet-700",
+  IN_PROGRESS: "bg-amber-50 text-amber-700",
+  COMPLETED: "bg-emerald-50 text-emerald-700",
+  REJECTED: "bg-red-50 text-red-700",
+};
+
+function EmployerStatusPill({ status }: { status: EmployerEnquiryStatus }) {
+  return (
+    <span className={`inline-flex whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${employerStatusClass[status]}`}>
+      {employerStatusLabels[status]}
+    </span>
+  );
+}
 
 function formatDate(date?: string | null) {
   if (!date) return "—";
@@ -387,6 +463,16 @@ export default function AdminDashboardPage() {
   );
   const [selectedEnquiry, setSelectedEnquiry] = useState<Enquiry | null>(null);
 
+  const [employerEnquiries, setEmployerEnquiries] = useState<EmployerEnquiry[]>([]);
+  const [loadingEmployerEnquiries, setLoadingEmployerEnquiries] = useState(false);
+  const [employerError, setEmployerError] = useState("");
+  const [employerSuccess, setEmployerSuccess] = useState("");
+  const [employerSearch, setEmployerSearch] = useState("");
+  const [employerStatusFilter, setEmployerStatusFilter] = useState("ALL");
+  const [selectedEmployer, setSelectedEmployer] = useState<EmployerEnquiry | null>(null);
+  const [employerNotes, setEmployerNotes] = useState("");
+  const [updatingEmployerId, setUpdatingEmployerId] = useState<string | null>(null);
+
   const [complaints, setComplaints] = useState<CaseRecord[]>([]);
   const [complaintsTotal, setComplaintsTotal] = useState(0);
   const [incidents, setIncidents] = useState<CaseRecord[]>([]);
@@ -522,6 +608,57 @@ export default function AdminDashboardPage() {
     accidentDateTo,
   ]);
 
+  const fetchEmployerEnquiries = useCallback(async () => {
+    if (!API_URL) {
+      setEmployerError("Admin API URL is not configured. Set NEXT_PUBLIC_API_URL.");
+      setLoadingEmployerEnquiries(false);
+      return;
+    }
+
+    setLoadingEmployerEnquiries(true);
+    setEmployerError("");
+
+    try {
+      const params = new URLSearchParams();
+      if (employerSearch.trim()) params.set("search", employerSearch.trim());
+      if (employerStatusFilter !== "ALL") params.set("status", employerStatusFilter);
+
+      const response = await fetch(
+        `${API_URL}/employer-enquiries${params.size ? `?${params}` : ""}`,
+        { credentials: "include", cache: "no-store" },
+      );
+
+      if (response.status === 401) {
+        router.replace("/admin/login");
+        return;
+      }
+
+      if (!response.ok) {
+        const message = await response.text().catch(() => "");
+        throw new Error(
+          `Unable to load Employer Connect enquiries (HTTP ${response.status})${message ? `: ${message.slice(0, 180)}` : ""}.`,
+        );
+      }
+
+      const result = await response.json();
+      const rows: EmployerEnquiry[] = Array.isArray(result)
+        ? result
+        : Array.isArray(result?.data)
+          ? result.data
+          : Array.isArray(result?.data?.data)
+            ? result.data.data
+            : [];
+
+      setEmployerEnquiries(rows);
+    } catch (err) {
+      setEmployerError(
+        err instanceof Error ? err.message : "Failed to load Employer Connect enquiries.",
+      );
+    } finally {
+      setLoadingEmployerEnquiries(false);
+    }
+  }, [router, employerSearch, employerStatusFilter]);
+
   const fetchEnquiries = useCallback(async () => {
     if (!API_URL) {
       setEnquiryError("Admin API URL is not configured.");
@@ -631,6 +768,10 @@ export default function AdminDashboardPage() {
   }, [admin, fetchEnquiries]);
 
   useEffect(() => {
+    if (admin && tab === "employer-connect") void fetchEmployerEnquiries();
+  }, [admin, tab, fetchEmployerEnquiries]);
+
+  useEffect(() => {
     if (admin && (tab === "complaints" || tab === "incidents")) {
       void fetchCases(tab);
     }
@@ -641,6 +782,66 @@ export default function AdminDashboardPage() {
       void fetchAccidentReports();
     }
   }, [admin, tab, fetchAccidentReports]);
+
+  async function handleEmployerStatus(
+    enquiry: EmployerEnquiry,
+    nextStatus: EmployerEnquiryStatus,
+    notes = enquiry.adminNotes || "",
+  ) {
+    if (!API_URL) return;
+
+    setUpdatingEmployerId(enquiry.id);
+    setEmployerError("");
+    setEmployerSuccess("");
+
+    try {
+      const response = await fetch(
+        `${API_URL}/employer-enquiries/${encodeURIComponent(enquiry.id)}/status`,
+        {
+          method: "PATCH",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: nextStatus, adminNotes: notes }),
+        },
+      );
+
+      if (response.status === 401) {
+        router.replace("/admin/login");
+        return;
+      }
+
+      if (!response.ok) {
+        const message = await response.text().catch(() => "");
+        throw new Error(
+          `Could not update Employer Connect enquiry (HTTP ${response.status})${message ? `: ${message.slice(0, 180)}` : ""}.`,
+        );
+      }
+
+      const result = await response.json().catch(() => null);
+      const updated = result?.data ?? result?.enquiry ?? result;
+      const merged: EmployerEnquiry = {
+        ...enquiry,
+        ...(updated && typeof updated === "object" ? updated : {}),
+        status: nextStatus,
+        adminNotes: notes,
+      };
+
+      setEmployerEnquiries((current) =>
+        current.map((item) => item.id === enquiry.id ? merged : item),
+      );
+      setSelectedEmployer((current) =>
+        current?.id === enquiry.id ? merged : current,
+      );
+      setEmployerNotes(notes);
+      setEmployerSuccess("Employer Connect enquiry updated successfully.");
+    } catch (err) {
+      setEmployerError(
+        err instanceof Error ? err.message : "Failed to update Employer Connect enquiry.",
+      );
+    } finally {
+      setUpdatingEmployerId(null);
+    }
+  }
 
   async function handleEnquiryStatus(
     enquiry: Enquiry,
@@ -1060,6 +1261,7 @@ export default function AdminDashboardPage() {
           {(
             [
               { id: "enquiries", label: "Contact Enquiries" },
+              { id: "employer-connect", label: "Employer Connect" },
               { id: "complaints", label: "Complaints" },
               { id: "incidents", label: "Incident Reports" },
               { id: "accident-reports", label: "Accident Reports" },
@@ -1071,6 +1273,7 @@ export default function AdminDashboardPage() {
               onClick={() => {
                 setTab(item.id);
                 setSelectedEnquiry(null);
+                setSelectedEmployer(null);
                 setSelectedCase(null);
                 setSelectedAccidentReport(null);
                 setShowAccidentForm(false);
@@ -1087,7 +1290,140 @@ export default function AdminDashboardPage() {
           ))}
         </nav>
 
-        {tab === "accident-reports" ? (
+        {tab === "employer-connect" ? (
+          <section className="space-y-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900">Employer Connect</h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  Review employer submissions, hiring requirements, vacancies and follow-up notes.
+                </p>
+              </div>
+              <button
+                onClick={() => void fetchEmployerEnquiries()}
+                disabled={loadingEmployerEnquiries}
+                className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+              >
+                {loadingEmployerEnquiries ? "Refreshing..." : "Refresh enquiries"}
+              </button>
+            </div>
+
+            {employerSuccess && (
+              <div role="status" className="flex items-center justify-between gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+                <span>✓ {employerSuccess}</span>
+                <button onClick={() => setEmployerSuccess("")} className="font-semibold hover:underline">Dismiss</button>
+              </div>
+            )}
+
+            {employerError && (
+              <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                <p>{employerError}</p>
+                <button onClick={() => void fetchEmployerEnquiries()} className="rounded-lg border border-red-300 px-3 py-1.5 font-semibold">Try again</button>
+              </div>
+            )}
+
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              {[
+                { label: "Matching submissions", value: employerEnquiries.length },
+                { label: "New", value: employerEnquiries.filter((item) => item.status === "NEW").length },
+                { label: "In progress", value: employerEnquiries.filter((item) => item.status === "IN_PROGRESS" || item.status === "CONTACTED").length },
+                { label: "Total vacancies", value: employerEnquiries.reduce((sum, item) => sum + (item.requirements || []).reduce((n, req) => n + (Number(req.vacancies) || 0), 0), 0) },
+              ].map((card) => (
+                <div key={card.label} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <p className="text-sm text-slate-500">{card.label}</p>
+                  <p className="mt-2 text-3xl font-bold text-slate-900">{card.value}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 sm:flex-row">
+              <input
+                type="search"
+                value={employerSearch}
+                onChange={(event) => setEmployerSearch(event.target.value)}
+                placeholder="Search company, reference, contact, email or job role..."
+                className="min-w-0 flex-1 rounded-lg border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+              <select
+                value={employerStatusFilter}
+                onChange={(event) => setEmployerStatusFilter(event.target.value)}
+                className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm"
+              >
+                <option value="ALL">All statuses</option>
+                <option value="NEW">New</option>
+                <option value="CONTACTED">Contacted</option>
+                <option value="IN_PROGRESS">In Progress</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="REJECTED">Rejected</option>
+              </select>
+            </div>
+
+            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[1100px] text-left text-sm">
+                  <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                    <tr>
+                      <th className="px-5 py-4">Reference / Company</th>
+                      <th className="px-5 py-4">Contact</th>
+                      <th className="px-5 py-4">Location</th>
+                      <th className="px-5 py-4">Hiring requirements</th>
+                      <th className="px-5 py-4">Submitted (IST)</th>
+                      <th className="px-5 py-4">Status</th>
+                      <th className="px-5 py-4">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {loadingEmployerEnquiries ? (
+                      <tr><td colSpan={7} className="px-5 py-12 text-center text-slate-500">Loading Employer Connect enquiries...</td></tr>
+                    ) : employerEnquiries.length === 0 ? (
+                      <tr><td colSpan={7} className="px-5 py-12 text-center text-slate-500">No Employer Connect submissions found.</td></tr>
+                    ) : (
+                      employerEnquiries.map((item) => {
+                        const reqs = item.requirements || [];
+                        const vacancies = reqs.reduce((sum, req) => sum + (Number(req.vacancies) || 0), 0);
+                        return (
+                          <tr key={item.id} className="align-top hover:bg-slate-50/70">
+                            <td className="px-5 py-4">
+                              <p className="font-semibold text-slate-900">{item.companyName}</p>
+                              <p className="mt-1 text-xs text-slate-500">{item.referenceNumber}</p>
+                              <p className="mt-1 text-xs text-slate-500">{item.employerType}</p>
+                            </td>
+                            <td className="px-5 py-4">
+                              <p className="font-medium text-slate-800">{item.contactName}</p>
+                              <a href={`mailto:${item.email}`} className="mt-1 block break-all text-xs text-blue-700 hover:underline">{item.email}</a>
+                              <p className="mt-1 text-xs text-slate-500">{item.phone}</p>
+                            </td>
+                            <td className="px-5 py-4 text-slate-700">
+                              {[item.city, item.state, item.country].filter(Boolean).join(", ") || "—"}
+                            </td>
+                            <td className="px-5 py-4">
+                              <p className="font-medium text-slate-800">{reqs.length} role(s)</p>
+                              <p className="mt-1 text-xs text-slate-500">{vacancies} vacancy/vacancies</p>
+                              {reqs.slice(0, 2).map((req) => <p key={req.id} className="mt-1 max-w-xs truncate text-xs text-slate-500">{req.jobRole}</p>)}
+                            </td>
+                            <td className="whitespace-nowrap px-5 py-4 text-slate-600">{formatDate(item.createdAt)}</td>
+                            <td className="px-5 py-4"><EmployerStatusPill status={item.status} /></td>
+                            <td className="px-5 py-4">
+                              <button
+                                onClick={() => { setSelectedEmployer(item); setEmployerNotes(item.adminNotes || ""); setEmployerError(""); setEmployerSuccess(""); }}
+                                className="font-semibold text-blue-700 hover:underline"
+                              >
+                                View / manage
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              <div className="border-t border-slate-200 px-5 py-3 text-xs text-slate-500">
+                Showing {employerEnquiries.length} Employer Connect submission(s).
+              </div>
+            </div>
+          </section>
+        ) : tab === "accident-reports" ? (
           <section className="space-y-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
@@ -1901,6 +2237,152 @@ export default function AdminDashboardPage() {
               >
                 {savingAccidentReport ? "Saving..." : selectedAccidentReport ? "Update report" : "Create report"}
               </button>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {selectedEmployer && tab === "employer-connect" && (
+        <div
+          className="fixed inset-0 z-[105] flex items-center justify-center bg-slate-950/60 p-4"
+          onClick={() => setSelectedEmployer(null)}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="employer-details-title"
+            className="max-h-[92vh] w-full max-w-5xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 id="employer-details-title" className="text-xl font-bold text-slate-900">Employer Connect submission</h2>
+                <p className="mt-1 text-sm text-slate-500">{selectedEmployer.referenceNumber} · Submitted {formatDate(selectedEmployer.createdAt)}</p>
+              </div>
+              <button onClick={() => setSelectedEmployer(null)} className="rounded-lg border border-slate-200 px-3 py-1.5 text-slate-600 hover:bg-slate-50">Close</button>
+            </div>
+
+            <div className="mt-6">
+              <h3 className="font-semibold text-slate-900">Company and contact details</h3>
+              <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {[
+                  { label: "Company", value: selectedEmployer.companyName },
+                  { label: "Employer type", value: selectedEmployer.employerType },
+                  { label: "Country", value: selectedEmployer.country },
+                  { label: "State", value: selectedEmployer.state || "—" },
+                  { label: "City", value: selectedEmployer.city },
+                  { label: "Address", value: selectedEmployer.address || "—" },
+                  { label: "Website", value: selectedEmployer.website || "—" },
+                  { label: "Agency licence", value: selectedEmployer.agencyLicence || "—" },
+                  { label: "Contact person", value: selectedEmployer.contactName },
+                  { label: "Designation", value: selectedEmployer.designation },
+                  { label: "Email", value: selectedEmployer.email },
+                  { label: "Phone", value: selectedEmployer.phone },
+                ].map((field) => (
+                  <div key={field.label} className="min-w-0">
+                    <p className="text-xs text-slate-500">{field.label}</p>
+                    <p className="mt-1 break-words font-medium text-slate-900">{field.value}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-6 border-t border-slate-200 pt-5">
+              <h3 className="font-semibold text-slate-900">Recruitment and work conditions</h3>
+              <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {[
+                  { label: "Recruitment model", value: selectedEmployer.recruitmentModel },
+                  { label: "Sponsorship", value: selectedEmployer.sponsorship || "—" },
+                  { label: "Accommodation", value: selectedEmployer.accommodation },
+                  { label: "Transport", value: selectedEmployer.transport },
+                  { label: "Working hours", value: selectedEmployer.workingHours },
+                  { label: "Weekly off", value: selectedEmployer.weeklyOff || "—" },
+                  { label: "Declaration", value: selectedEmployer.declaration ? "Accepted" : "Not accepted" },
+                ].map((field) => (
+                  <div key={field.label}>
+                    <p className="text-xs text-slate-500">{field.label}</p>
+                    <p className="mt-1 break-words font-medium text-slate-900">{field.value || "—"}</p>
+                  </div>
+                ))}
+                <div className="sm:col-span-2 lg:col-span-3">
+                  <p className="text-xs text-slate-500">Additional conditions</p>
+                  <p className="mt-1 whitespace-pre-wrap break-words rounded-lg bg-slate-50 p-3 text-sm text-slate-700">{selectedEmployer.additionalConditions || "—"}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 border-t border-slate-200 pt-5">
+              <h3 className="font-semibold text-slate-900">Hiring requirements ({selectedEmployer.requirements?.length || 0})</h3>
+              {!selectedEmployer.requirements?.length ? (
+                <p className="mt-3 rounded-lg bg-slate-50 p-4 text-sm text-slate-500">No hiring requirements were returned by the API.</p>
+              ) : (
+                <div className="mt-3 space-y-4">
+                  {selectedEmployer.requirements.map((req, index) => (
+                    <div key={req.id || index} className="rounded-xl border border-slate-200 p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <h4 className="font-semibold text-slate-900">{index + 1}. {req.jobRole}</h4>
+                        <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">{req.vacancies} vacancies</span>
+                      </div>
+                      <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                        {[
+                          { label: "Hiring market", value: req.hiringMarket },
+                          { label: "Destination country", value: req.destinationCountry || "—" },
+                          { label: "Industry", value: req.industry },
+                          { label: "Qualification", value: req.qualification || "—" },
+                          { label: "Experience", value: req.experience || "—" },
+                          { label: "Salary", value: req.salary },
+                          { label: "Job location", value: req.jobLocation },
+                          { label: "Employment type", value: req.employmentType },
+                          { label: "Contract duration", value: req.contractDuration || "—" },
+                        ].map((field) => (
+                          <div key={field.label}>
+                            <p className="text-xs text-slate-500">{field.label}</p>
+                            <p className="mt-1 break-words text-sm font-medium text-slate-800">{field.value || "—"}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 border-t border-slate-200 pt-5">
+              <h3 className="font-semibold text-slate-900">Admin follow-up</h3>
+              <label className="mt-4 block text-sm font-medium text-slate-700">
+                Status
+                <select
+                  value={selectedEmployer.status}
+                  onChange={(event) => setSelectedEmployer((current) => current ? { ...current, status: event.target.value as EmployerEnquiryStatus } : current)}
+                  className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm"
+                >
+                  {(["NEW", "CONTACTED", "IN_PROGRESS", "COMPLETED", "REJECTED"] as EmployerEnquiryStatus[]).map((status) => (
+                    <option key={status} value={status}>{employerStatusLabels[status]}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="mt-4 block text-sm font-medium text-slate-700">
+                Internal admin notes
+                <textarea
+                  rows={4}
+                  maxLength={5000}
+                  value={employerNotes}
+                  onChange={(event) => setEmployerNotes(event.target.value)}
+                  placeholder="Record follow-up, discussion or next action..."
+                  className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                />
+                <span className="mt-1 block text-right text-xs text-slate-500">{employerNotes.length}/5000</span>
+              </label>
+              <div className="mt-4 flex flex-wrap justify-end gap-3">
+                <button onClick={() => setSelectedEmployer(null)} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700">Close</button>
+                <button
+                  onClick={() => void handleEmployerStatus(selectedEmployer, selectedEmployer.status, employerNotes)}
+                  disabled={updatingEmployerId === selectedEmployer.id}
+                  className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:opacity-60"
+                >
+                  {updatingEmployerId === selectedEmployer.id ? "Saving..." : "Save follow-up"}
+                </button>
+              </div>
             </div>
           </section>
         </div>
