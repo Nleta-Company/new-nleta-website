@@ -452,6 +452,7 @@ export default function AdminDashboardPage() {
   const [error, setError] = useState("");
   const [loggingOut, setLoggingOut] = useState(false);
   const [tab, setTab] = useState<Tab>("enquiries");
+  const [deletingRecordKey, setDeletingRecordKey] = useState<string | null>(null);
 
   const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
   const [enquiryTotal, setEnquiryTotal] = useState(0);
@@ -783,6 +784,73 @@ export default function AdminDashboardPage() {
       void fetchAccidentReports();
     }
   }, [admin, tab, fetchAccidentReports]);
+
+  async function deleteDashboardRecord(
+    resource: "contact-enquiries" | "employer-enquiries" | "complaints" | "incident-reports",
+    id: string,
+    label: string,
+  ) {
+    if (!API_URL) {
+      window.alert("Admin API URL is not configured.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Are you sure you want to permanently delete this record?\n\n${label}\n\nThis action cannot be undone.`,
+    );
+    if (!confirmed) return;
+
+    const key = `${resource}:${id}`;
+    setDeletingRecordKey(key);
+    setEnquiryError("");
+    setEmployerError("");
+    setCaseError("");
+
+    try {
+      const response = await fetch(
+        `${API_URL}/${resource}/${encodeURIComponent(id)}`,
+        { method: "DELETE", credentials: "include" },
+      );
+
+      if (response.status === 401) {
+        router.replace("/admin/login");
+        return;
+      }
+      if (!response.ok) {
+        const message = await response.text().catch(() => "");
+        throw new Error(
+          `Could not delete record (HTTP ${response.status})${message ? `: ${message.slice(0, 220)}` : ""}.`,
+        );
+      }
+
+      if (resource === "contact-enquiries") {
+        setEnquiries((current) => current.filter((item) => item.id !== id));
+        setEnquiryTotal((current) => Math.max(0, current - 1));
+        setSelectedEnquiry((current) => current?.id === id ? null : current);
+      } else if (resource === "employer-enquiries") {
+        setEmployerEnquiries((current) => current.filter((item) => item.id !== id));
+        setSelectedEmployer((current) => current?.id === id ? null : current);
+        setEmployerSuccess("Employer Connect enquiry deleted successfully.");
+      } else if (resource === "complaints") {
+        setComplaints((current) => current.filter((item) => item.id !== id));
+        setComplaintsTotal((current) => Math.max(0, current - 1));
+        setSelectedCase((current) => current?.id === id ? null : current);
+        setCaseSuccess("Complaint deleted successfully.");
+      } else {
+        setIncidents((current) => current.filter((item) => item.id !== id));
+        setIncidentsTotal((current) => Math.max(0, current - 1));
+        setSelectedCase((current) => current?.id === id ? null : current);
+        setCaseSuccess("Incident report deleted successfully.");
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to delete record.";
+      if (resource === "contact-enquiries") setEnquiryError(message);
+      else if (resource === "employer-enquiries") setEmployerError(message);
+      else setCaseError(message);
+    } finally {
+      setDeletingRecordKey(null);
+    }
+  }
 
   async function handleEmployerStatus(
     enquiry: EmployerEnquiry,
@@ -1415,6 +1483,13 @@ export default function AdminDashboardPage() {
                               >
                                 View / manage
                               </button>
+                              <button
+                                onClick={() => void deleteDashboardRecord("employer-enquiries", item.id, `${item.companyName} (${item.referenceNumber})`)}
+                                disabled={deletingRecordKey === `employer-enquiries:${item.id}`}
+                                className="font-semibold text-red-600 hover:underline disabled:opacity-60"
+                              >
+                                {deletingRecordKey === `employer-enquiries:${item.id}` ? "Deleting..." : "Delete"}
+                              </button>
                             </td>
                           </tr>
                         );
@@ -1897,6 +1972,13 @@ export default function AdminDashboardPage() {
                                   Saving...
                                 </span>
                               )}
+                              <button
+                                onClick={() => void deleteDashboardRecord("contact-enquiries", enquiry.id, `${enquiry.name} — ${enquiry.email}`)}
+                                disabled={deletingRecordKey === `contact-enquiries:${enquiry.id}`}
+                                className="font-semibold text-red-600 hover:underline disabled:opacity-60"
+                              >
+                                {deletingRecordKey === `contact-enquiries:${enquiry.id}` ? "Deleting..." : "Delete"}
+                              </button>
                             </div>
                           </td>
                         </tr>
@@ -2063,6 +2145,13 @@ export default function AdminDashboardPage() {
                               className="font-semibold text-blue-700 hover:underline"
                             >
                               View / manage
+                            </button>
+                            <button
+                              onClick={() => void deleteDashboardRecord(tab === "complaints" ? "complaints" : "incident-reports", item.id, `${tab === "complaints" ? "Complaint" : "Incident report"}: ${displayName(item)} — ${item.subject || item.description || item.id}`)}
+                              disabled={deletingRecordKey === `${tab === "complaints" ? "complaints" : "incident-reports"}:${item.id}`}
+                              className="mt-2 font-semibold text-red-600 hover:underline disabled:opacity-60"
+                            >
+                              {deletingRecordKey === `${tab === "complaints" ? "complaints" : "incident-reports"}:${item.id}` ? "Deleting..." : "Delete"}
                             </button>
                           </td>
                         </tr>
