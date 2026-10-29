@@ -98,16 +98,23 @@ type Evidence = {
 
 type CaseRecord = {
   id: string;
-  name?: string;
-  fullName?: string;
-  email?: string;
-  phone?: string;
-  organization?: string;
+  // Complaint and incident APIs may use different field names.
+  name?: string | null;
+  fullName?: string | null;
+  reporterName?: string | null;
+  email?: string | null;
+  reporterEmail?: string | null;
+  phone?: string | null;
+  reporterPhone?: string | null;
+  organization?: string | null;
   relatedReference?: string | null;
-  subject?: string;
-  description?: string;
-  incidentDate?: string;
-  location?: string;
+  referenceNumber?: string | null;
+  subject?: string | null;
+  description?: string | null;
+  incidentType?: string | null;
+  severity?: string | null;
+  incidentDate?: string | null;
+  location?: string | null;
   injuryDetails?: string | null;
   immediateAction?: string | null;
   status: CaseStatus;
@@ -293,7 +300,7 @@ function unwrapList<T>(
 }
 
 function displayName(item: CaseRecord) {
-  return item.name || item.fullName || item.email || "Unnamed submission";
+  return item.name || item.fullName || item.reporterName || item.email || item.reporterEmail || "Unnamed submission";
 }
 
 function EvidencePreview({
@@ -2111,19 +2118,22 @@ export default function AdminDashboardPage() {
                               {displayName(item)}
                             </p>
                             <p className="mt-1 text-xs text-slate-500">
-                              {item.email || "No email provided"}
+                              {item.email || item.reporterEmail || "No email provided"}
                             </p>
                             <p className="mt-1 text-xs text-slate-500">
-                              {item.phone || "No phone provided"}
+                              {item.phone || item.reporterPhone || "No phone provided"}
                             </p>
                           </td>
                           <td className="max-w-sm px-5 py-4">
                             <p className="font-medium text-slate-800">
-                              {item.relatedReference || item.location || "—"}
+                              {item.referenceNumber || item.relatedReference || item.incidentType || item.location || "—"}
                             </p>
                             <p className="mt-1 line-clamp-2 text-xs text-slate-500">
                               {item.subject || item.description || "—"}
                             </p>
+                            {tab === "incidents" && item.severity && (
+                              <p className="mt-1 text-xs font-semibold text-amber-700">Severity: {item.severity}</p>
+                            )}
                           </td>
                           <td className="whitespace-nowrap px-5 py-4 text-slate-600">
                             {formatDate(item.createdAt)}
@@ -2608,14 +2618,23 @@ export default function AdminDashboardPage() {
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
                 {[
                   { label: "Name", value: displayName(selectedCase) },
-                  { label: "Email", value: selectedCase.email || "—" },
-                  { label: "Phone", value: selectedCase.phone || "—" },
+                  { label: "Email", value: selectedCase.email || selectedCase.reporterEmail || "—" },
+                  { label: "Phone", value: selectedCase.phone || selectedCase.reporterPhone || "—" },
+                  { label: "Organization", value: selectedCase.organization || "—" },
                   {
                     label: "Reference",
-                    value: selectedCase.relatedReference || "—",
+                    value: selectedCase.referenceNumber || selectedCase.relatedReference || "—",
                   },
                   ...(tab === "incidents"
                     ? [
+                      {
+                        label: "Incident type",
+                        value: selectedCase.incidentType || "—",
+                      },
+                      {
+                        label: "Severity",
+                        value: selectedCase.severity || "—",
+                      },
                       {
                         label: "Location",
                         value: selectedCase.location || "—",

@@ -479,15 +479,13 @@ export default function IssueReportForms() {
                                                         defaultValue=""
                                                     >
                                                         <option value="" disabled>Select incident type</option>
-                                                        <option value="Lift stopped between floors">
-                                                            Lift stopped between floors
-                                                        </option>
-                                                        <option value="Entrapment">Entrapment</option>
-                                                        <option value="Door malfunction">Door malfunction</option>
-                                                        <option value="Unexpected movement">
-                                                            Unexpected movement
-                                                        </option>
+                                                        <option value="Accident">Accident</option>
+                                                        <option value="Equipment Failure">Equipment Failure</option>
+                                                        <option value="Person Trapped">Person Trapped / Entrapment</option>
                                                         <option value="Injury">Injury</option>
+                                                        <option value="Fire">Fire</option>
+                                                        <option value="Electrical Issue">Electrical Issue</option>
+                                                        <option value="Safety Hazard">Safety Hazard</option>
                                                         <option value="Other">Other</option>
                                                     </select>
                                                 </div>
