@@ -123,6 +123,7 @@ export default function EmployerConnectForm() {
         city: read("city"),
         address: read("address") || null,
         website: read("website") || null,
+        gstRegistrationNumber: read("gstRegistrationNumber") || null,
         agencyLicence: read("agencyLicence") || null,
 
         contactName: read("contactName"),
@@ -364,6 +365,17 @@ export default function EmployerConnectForm() {
                     placeholder="https://example.com"
                     maxLength={500}
                   />
+                </label>
+
+                <label className={labelClass}>
+                  GST No. / Registration No.
+                  <input
+                    className={inputClass}
+                    name="gstRegistrationNumber"
+                    placeholder="Enter GST or company registration number"
+                    maxLength={100}
+                  />
+                 
                 </label>
 
                 {employerType === "Recruitment Agency" && (

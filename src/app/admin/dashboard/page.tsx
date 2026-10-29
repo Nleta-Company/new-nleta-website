@@ -62,6 +62,7 @@ type EmployerEnquiry = {
   city: string;
   address?: string | null;
   website?: string | null;
+  gstRegistrationNumber?: string | null;
   agencyLicence?: string | null;
   contactName: string;
   designation: string;
@@ -1364,6 +1365,7 @@ export default function AdminDashboardPage() {
                   <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                     <tr>
                       <th className="px-5 py-4">Reference / Company</th>
+                      <th className="px-5 py-4">GST No. / Registration No.</th>
                       <th className="px-5 py-4">Contact</th>
                       <th className="px-5 py-4">Location</th>
                       <th className="px-5 py-4">Hiring requirements</th>
@@ -1374,9 +1376,9 @@ export default function AdminDashboardPage() {
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {loadingEmployerEnquiries ? (
-                      <tr><td colSpan={7} className="px-5 py-12 text-center text-slate-500">Loading Employer Connect enquiries...</td></tr>
+                      <tr><td colSpan={8} className="px-5 py-12 text-center text-slate-500">Loading Employer Connect enquiries...</td></tr>
                     ) : employerEnquiries.length === 0 ? (
-                      <tr><td colSpan={7} className="px-5 py-12 text-center text-slate-500">No Employer Connect submissions found.</td></tr>
+                      <tr><td colSpan={8} className="px-5 py-12 text-center text-slate-500">No Employer Connect submissions found.</td></tr>
                     ) : (
                       employerEnquiries.map((item) => {
                         const reqs = item.requirements || [];
@@ -1387,6 +1389,9 @@ export default function AdminDashboardPage() {
                               <p className="font-semibold text-slate-900">{item.companyName}</p>
                               <p className="mt-1 text-xs text-slate-500">{item.referenceNumber}</p>
                               <p className="mt-1 text-xs text-slate-500">{item.employerType}</p>
+                            </td>
+                            <td className="px-5 py-4">
+                              <p className="break-words font-medium text-slate-800">{item.gstRegistrationNumber || "—"}</p>
                             </td>
                             <td className="px-5 py-4">
                               <p className="font-medium text-slate-800">{item.contactName}</p>
@@ -2273,6 +2278,7 @@ export default function AdminDashboardPage() {
                   { label: "City", value: selectedEmployer.city },
                   { label: "Address", value: selectedEmployer.address || "—" },
                   { label: "Website", value: selectedEmployer.website || "—" },
+                  { label: "GST No. / Registration No.", value: selectedEmployer.gstRegistrationNumber || "—" },
                   { label: "Agency licence", value: selectedEmployer.agencyLicence || "—" },
                   { label: "Contact person", value: selectedEmployer.contactName },
                   { label: "Designation", value: selectedEmployer.designation },
