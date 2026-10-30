@@ -1,5 +1,5 @@
 "use client";
-
+import CandidateRegistrationForm from "@/components/CandidateRegistrationForm";
 import { useState } from "react";
 import Link from "next/link";
 import EmployerConnectForm from "@/components/EmployerConnectForm";
@@ -208,11 +208,22 @@ const safeguards = [
 
 export default function EmploymentPage() {
   const [showEmployerForm, setShowEmployerForm] = useState(false);
+  const [showCandidateForm, setShowCandidateForm] = useState(false);
 
   const openEmployerForm = () => {
     setShowEmployerForm(true);
     window.setTimeout(() => {
       document.getElementById("employer-connect-form")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 100);
+  };
+
+  const openCandidateForm = () => {
+    setShowCandidateForm(true);
+    window.setTimeout(() => {
+      document.getElementById("candidate-registration-form")?.scrollIntoView({
         behavior: "smooth",
         block: "start",
       });
@@ -270,9 +281,13 @@ export default function EmploymentPage() {
               >
                 I&apos;m an Employer <span aria-hidden="true" className="inline-block transition-transform duration-300 group-hover:translate-x-1">→</span>
               </button>
-              <Link href="#candidates" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/30 bg-white/5 px-5 py-3 text-sm font-semibold text-white backdrop-blur-sm transition duration-300 hover:-translate-y-1 hover:border-white/60 hover:bg-white/10">
+              <button
+                type="button"
+                onClick={openCandidateForm}
+                className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/30 bg-white/5 px-5 py-3 text-sm font-semibold text-white backdrop-blur-sm transition duration-300 hover:-translate-y-1 hover:border-white/60 hover:bg-white/10"
+              >
                 I&apos;m a Candidate
-              </Link>
+              </button>
             </div>
             <p className="employment-reveal employment-delay-3 mx-auto mt-4 max-w-3xl text-xs leading-5 text-slate-300">
               Employer and vacancy verification, candidate checks and recruitment support are subject to evidence, consent, applicable law and the agreed scope. Registration does not guarantee an interview, job, visa or placement.
@@ -499,9 +514,13 @@ export default function EmploymentPage() {
             <p className="eyebrow">For candidates</p>
             <h2 className="section-title mt-4">Prepare for relevant technical opportunities.</h2>
             <p className="body-copy mt-5">Candidates may express interest in eligible roles and share relevant professional information through the appropriate process. Candidate registration does not guarantee an interview, job offer, visa or employment.</p>
-            <Link href="/contact?audience=candidate&interest=employment" className="mt-7 inline-flex items-center gap-2 rounded-xl border border-[#cbd9e8] bg-white px-5 py-3 text-sm font-bold text-[#2465a7] transition duration-300 hover:-translate-y-0.5 hover:border-[#2465a7] hover:shadow-md">
+            <button
+              type="button"
+              onClick={openCandidateForm}
+              className="mt-7 inline-flex items-center gap-2 rounded-xl border border-[#cbd9e8] bg-white px-5 py-3 text-sm font-bold text-[#2465a7] transition duration-300 hover:-translate-y-0.5 hover:border-[#2465a7] hover:shadow-md"
+            >
               Express Candidate Interest <span aria-hidden="true">→</span>
-            </Link>
+            </button>
           </div>
           <div className="grid gap-4">
             {candidateBenefits.map((benefit, index) => (
@@ -514,6 +533,29 @@ export default function EmploymentPage() {
               </article>
             ))}
           </div>
+
+          {showCandidateForm && (
+            <div className="mt-10 scroll-mt-24 lg:col-span-2">
+              <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#07877f]">
+                    Candidate Registration
+                  </p>
+                  <h3 className="mt-2 text-2xl font-bold text-[#102844]">
+                    Share your professional profile
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowCandidateForm(false)}
+                  className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                >
+                  Close Form ×
+                </button>
+              </div>
+              <CandidateRegistrationForm />
+            </div>
+          )}
         </div>
       </section>
 

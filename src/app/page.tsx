@@ -470,7 +470,6 @@ export default function HomePage() {
 
           <span className="hero-reveal hero-reveal-2 inline-flex max-w-full items-center justify-center gap-2 rounded-full border border-white/20 bg-white/[0.08] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-teal-200 backdrop-blur-sm sm:px-4 sm:text-xs md:text-sm">
 
-            <span className="h-2 w-2 animate-pulse rounded-full bg-teal-300" />
 
             Independent Engineering · Safety · Skill Development
 
@@ -538,6 +537,89 @@ export default function HomePage() {
             Certificate Download & Verification <Arrow />
 
           </Link>
+
+        </div>
+
+      </section>
+
+      {/* About NLETA */}
+
+      <section className="bg-white pt-8 pb-16 sm:pt-10 sm:pb-16">
+        <div className="container-shell grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+
+          <ScrollReveal direction="left">
+
+            <span className="eyebrow">About NLETA</span>
+
+            <h2 className="section-title mt-4">About NLETA at a Glance</h2>
+
+            <p className="body-copy mt-5">
+
+              NLETA — National Lift Escalator Testing Agency — works to
+
+              strengthen lift and escalator safety through independent
+
+              engineering assessment, safety awareness, technical competency
+
+              development and structured digital governance.
+
+            </p>
+
+            <Link href="/about" className="button-primary mt-7">
+
+              Know More About NLETA <Arrow />
+
+            </Link>
+
+          </ScrollReveal>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+
+            {[
+
+              "Independent and objective engineering assessment",
+
+              "User awareness and safety education",
+
+              "Structured documentation and record management",
+
+              "Technical and professional competency development",
+
+              "Digital governance to support ongoing oversight",
+
+            ].map((item, index) => (
+
+              <ScrollReveal
+
+                key={item}
+
+                delay={((index % 3) + 1) as 1 | 2 | 3}
+
+                className="h-full"
+
+              >
+
+                <div className={`${cardClass} flex items-start gap-3`}>
+
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 font-bold text-nleta-blue">
+
+                    {String(index + 1).padStart(2, "0")}
+
+                  </span>
+
+                  <p className="text-sm font-medium leading-6 text-slate-700">
+
+                    {item}
+
+                  </p>
+
+                </div>
+
+              </ScrollReveal>
+
+            ))}
+
+          </div>
 
         </div>
 
@@ -866,89 +948,6 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-      </section>
-
-      {/* About NLETA */}
-
-      <section className="bg-white pt-8 pb-16 sm:pt-10 sm:pb-16">
-        <div className="container-shell grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
-
-          <ScrollReveal direction="left">
-
-            <span className="eyebrow">About NLETA</span>
-
-            <h2 className="section-title mt-4">About NLETA at a Glance</h2>
-
-            <p className="body-copy mt-5">
-
-              NLETA — National Lift Escalator Testing Agency — works to
-
-              strengthen lift and escalator safety through independent
-
-              engineering assessment, safety awareness, technical competency
-
-              development and structured digital governance.
-
-            </p>
-
-            <Link href="/about" className="button-primary mt-7">
-
-              Know More About NLETA <Arrow />
-
-            </Link>
-
-          </ScrollReveal>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-
-            {[
-
-              "Independent and objective engineering assessment",
-
-              "User awareness and safety education",
-
-              "Structured documentation and record management",
-
-              "Technical and professional competency development",
-
-              "Digital governance to support ongoing oversight",
-
-            ].map((item, index) => (
-
-              <ScrollReveal
-
-                key={item}
-
-                delay={((index % 3) + 1) as 1 | 2 | 3}
-
-                className="h-full"
-
-              >
-
-                <div className={`${cardClass} flex items-start gap-3`}>
-
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 font-bold text-nleta-blue">
-
-                    {String(index + 1).padStart(2, "0")}
-
-                  </span>
-
-                  <p className="text-sm font-medium leading-6 text-slate-700">
-
-                    {item}
-
-                  </p>
-
-                </div>
-
-              </ScrollReveal>
-
-            ))}
-
-          </div>
-
-        </div>
-
       </section>
 
       {/* Engineering services */}

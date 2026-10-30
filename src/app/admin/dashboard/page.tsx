@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import AdminGalleryManager from "@/components/AdminGalleryManager";
+import CandidateManagement from "@/components/admin/CandidateManagement";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -131,7 +132,7 @@ type ListResponse<T> = {
   success?: boolean;
 };
 
-type Tab = "enquiries" | "employer-connect" | "complaints" | "incidents" | "accident-reports" | "gallery";
+type Tab = "enquiries" | "employer-connect" | "candidates"| "complaints" | "incidents" | "accident-reports" | "gallery";
 type CaseTab = "complaints" | "incidents";
 
 type AccidentReportType = "TRAPPED" | "FATAL" | "INJURED" | "OTHER";
@@ -1338,6 +1339,7 @@ export default function AdminDashboardPage() {
             [
               { id: "enquiries", label: "Contact Enquiries" },
               { id: "employer-connect", label: "Employer Connect" },
+              { id: "candidates", label: "Candidate Management" },
               { id: "complaints", label: "Complaints" },
               { id: "incidents", label: "Incident Reports" },
               { id: "accident-reports", label: "Accident Reports" },
@@ -1366,7 +1368,9 @@ export default function AdminDashboardPage() {
           ))}
         </nav>
 
-        {tab === "employer-connect" ? (
+        {tab === "candidates" ? (
+          <CandidateManagement />
+        ) : tab === "employer-connect" ? (
           <section className="space-y-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
