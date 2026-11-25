@@ -395,12 +395,12 @@ const clpOnline = 279;
 const clpOffline = 80;
 const clpHybrid = 45;
 
-const inspectionClients = 495;
+const inspectionClients = 502;
 const clpClients = 318;
-const employersWithPortal = 456;
+const employersWithPortal = 471;
 
-const vacanciesLiftIndustry = 1260;
-const vacanciesOtherIndustry = 315;
+const vacanciesLiftIndustry = 1285;
+const vacanciesOtherIndustry = 323;
 const totalVacancies = vacanciesLiftIndustry + vacanciesOtherIndustry;
 
 const totalSatisfiedClients =
@@ -684,7 +684,7 @@ export default function HomePage() {
                     </p>
 
                     <p className="mt-2 text-2xl font-bold tracking-tight text-emerald-700 sm:text-3xl">
-                      <StatsCounter value={733} />
+                      <StatsCounter value={926} />
                     </p>
 
                     <p className="mt-1 text-[10px] leading-4 text-slate-500 sm:text-xs">
@@ -701,7 +701,7 @@ export default function HomePage() {
                     </p>
 
                     <p className="mt-2 text-2xl font-bold tracking-tight text-blue-700 sm:text-3xl">
-                      <StatsCounter value={81} />
+                      <StatsCounter value={87} />
                     </p>
 
                     <p className="mt-1 text-[10px] leading-4 text-slate-500 sm:text-xs">
@@ -720,7 +720,7 @@ export default function HomePage() {
                     </p>
 
                     <p className="mt-2 text-2xl font-bold tracking-tight text-cyan-700 sm:text-3xl">
-                      <StatsCounter value={609} showPlus={false} />
+                      <StatsCounter value={644} showPlus={false} />
                     </p>
 
                     <p className="mt-1 text-[10px] leading-4 text-slate-500 sm:text-xs">
