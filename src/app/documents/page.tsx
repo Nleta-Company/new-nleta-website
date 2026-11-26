@@ -50,6 +50,14 @@ const documents = [
         file: "/documents/ISO45001.jpeg",
         description: "Official NLETA certification document.",
     },
+
+    {
+        title: "NLETA ISO/IEC 17020:2026 Certificate",
+        category: "Certification",
+        year: "2026",
+        file: "/documents/170202026.png",
+        description: "Official NLETA certification document.",
+    },
 ];
 
 export default function DocumentsPage() {
